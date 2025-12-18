@@ -21,6 +21,7 @@ import Cart from "./pages/customer/Cart";
 import Checkout from "./pages/customer/Checkout";
 import OrderSuccess from "./pages/customer/OrderSuccess";
 import MyOrders from "./pages/customer/MyOrders";
+import OrderTracking from "./pages/customer/OrderTracking";
 
 const queryClient = new QueryClient();
 
@@ -40,6 +41,7 @@ const App = () => (
               <Route path="/checkout" element={<Checkout />} />
               <Route path="/order-success/:id" element={<OrderSuccess />} />
               <Route path="/my-orders" element={<MyOrders />} />
+              <Route path="/order/:id" element={<OrderTracking />} />
               <Route path="/auth" element={<Auth />} />
               
               {/* Admin Routes */}
