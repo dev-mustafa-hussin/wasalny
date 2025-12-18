@@ -14,7 +14,8 @@ import {
   Calendar,
   Filter,
   X,
-  FileDown
+  FileDown,
+  Mail
 } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
@@ -25,6 +26,8 @@ import { ar } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import EmailStats from '@/components/admin/EmailStats';
 
 interface OrderData {
   id: string;
@@ -282,14 +285,28 @@ export default function Reports() {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-wrap items-center justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-bold flex items-center gap-2">
-            <FileText className="h-6 w-6" />
-            التقارير
-          </h1>
-          <p className="text-muted-foreground">تقارير تفصيلية للطلبات والإيرادات</p>
-        </div>
+      <div>
+        <h1 className="text-2xl font-bold flex items-center gap-2">
+          <FileText className="h-6 w-6" />
+          التقارير
+        </h1>
+        <p className="text-muted-foreground">تقارير تفصيلية للطلبات والإيرادات والإيميلات</p>
+      </div>
+
+      <Tabs defaultValue="orders" className="space-y-6">
+        <TabsList>
+          <TabsTrigger value="orders" className="gap-2">
+            <ShoppingCart className="h-4 w-4" />
+            تقارير الطلبات
+          </TabsTrigger>
+          <TabsTrigger value="emails" className="gap-2">
+            <Mail className="h-4 w-4" />
+            إحصائيات البريد
+          </TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="orders" className="space-y-6">
+          <div className="flex flex-wrap items-center justify-end gap-3">
         <div className="flex flex-wrap items-center gap-3">
           <Select 
             value={isCustomDateRange ? 'custom' : period} 
@@ -634,6 +651,12 @@ export default function Reports() {
           </CardContent>
         </Card>
       </div>
+        </TabsContent>
+
+        <TabsContent value="emails">
+          <EmailStats />
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }

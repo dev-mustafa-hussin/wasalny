@@ -49,7 +49,7 @@ interface EmailTemplate {
   custom_message_cancelled: string | null;
 }
 
-function buildEmailHtml(template: EmailTemplate, customerName: string, statusInfo: { ar: string }, shortOrderId: string, storeName: string, statusMessage: string) {
+function buildEmailHtml(template: EmailTemplate, customerName: string, statusInfo: { ar: string }, shortOrderId: string, storeName: string, statusMessage: string, trackingPixelUrl?: string) {
   return `
     <!DOCTYPE html>
     <html dir="rtl" lang="ar">
@@ -95,6 +95,7 @@ function buildEmailHtml(template: EmailTemplate, customerName: string, statusInf
           <p>${template.footer_text_en}</p>
         </div>
       </div>
+      ${trackingPixelUrl ? `<img src="${trackingPixelUrl}" width="1" height="1" style="display:none;" alt="" />` : ''}
     </body>
     </html>
   `;
@@ -163,6 +164,18 @@ const handler = async (req: Request): Promise<Response> => {
       });
 
       console.log("Test email sent successfully:", emailResponse);
+
+      // Log test email
+      const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+      const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+      const supabase = createClient(supabaseUrl, supabaseServiceKey);
+      
+      await supabase.from("email_logs").insert({
+        recipient_email: test_email,
+        status: status,
+        subject: emailSubject,
+        is_test: true,
+      });
 
       return new Response(JSON.stringify({ success: true, data: emailResponse }), {
         status: 200,
@@ -246,7 +259,11 @@ const handler = async (req: Request): Promise<Response> => {
       .replace('{order_id}', shortOrderId)
       .replace('{status}', statusInfo.ar);
 
-    const emailHtml = buildEmailHtml(template, customerName, statusInfo, shortOrderId, store_name, statusMessage);
+    // Generate tracking ID and URL
+    const trackingId = crypto.randomUUID();
+    const trackingPixelUrl = `${supabaseUrl}/functions/v1/track-email-open?id=${trackingId}`;
+
+    const emailHtml = buildEmailHtml(template, customerName, statusInfo, shortOrderId, store_name, statusMessage, trackingPixelUrl);
 
     const emailResponse = await resend.emails.send({
       from: "Waslni <onboarding@resend.dev>",
@@ -256,6 +273,16 @@ const handler = async (req: Request): Promise<Response> => {
     });
 
     console.log("Email sent successfully:", emailResponse);
+
+    // Log email in database
+    await supabase.from("email_logs").insert({
+      order_id: order_id,
+      recipient_email: customerEmail,
+      status: new_status,
+      subject: emailSubject,
+      tracking_id: trackingId,
+      is_test: false,
+    });
 
     return new Response(JSON.stringify({ success: true, data: emailResponse }), {
       status: 200,

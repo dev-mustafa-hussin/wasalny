@@ -109,6 +109,50 @@ export type Database = {
         }
         Relationships: []
       }
+      email_logs: {
+        Row: {
+          id: string
+          is_test: boolean | null
+          opened_at: string | null
+          order_id: string | null
+          recipient_email: string
+          sent_at: string
+          status: string
+          subject: string | null
+          tracking_id: string
+        }
+        Insert: {
+          id?: string
+          is_test?: boolean | null
+          opened_at?: string | null
+          order_id?: string | null
+          recipient_email: string
+          sent_at?: string
+          status: string
+          subject?: string | null
+          tracking_id?: string
+        }
+        Update: {
+          id?: string
+          is_test?: boolean | null
+          opened_at?: string | null
+          order_id?: string | null
+          recipient_email?: string
+          sent_at?: string
+          status?: string
+          subject?: string | null
+          tracking_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "email_logs_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       email_templates: {
         Row: {
           created_at: string
