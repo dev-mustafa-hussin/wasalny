@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { ArrowRight, Package, Clock, CheckCircle, Truck, XCircle, ChefHat, MapPin, Phone, Loader2, Star, Printer } from 'lucide-react';
+import { ArrowRight, Package, Clock, CheckCircle, Truck, XCircle, ChefHat, MapPin, Phone, Loader2, Star, Printer, Download } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { CustomerHeader } from '@/components/customer/CustomerHeader';
 import { useAuth } from '@/hooks/useAuth';
@@ -25,6 +25,7 @@ import {
 import { format } from 'date-fns';
 import { ar } from 'date-fns/locale';
 import { toast } from 'sonner';
+import jsPDF from 'jspdf';
 
 const statusSteps = [
   { key: 'pending', label: 'قيد الانتظار', icon: Clock, description: 'تم استلام طلبك' },
@@ -259,6 +260,91 @@ export default function OrderTracking() {
     printWindow.document.close();
   };
 
+  const downloadInvoicePDF = () => {
+    if (!order) return;
+
+    const doc = new jsPDF({
+      orientation: 'portrait',
+      unit: 'mm',
+      format: 'a4',
+    });
+
+    const subtotal = Number(order.total_amount) - Number(order.delivery_fee);
+    
+    // Header
+    doc.setFontSize(22);
+    doc.text('Waslni', 105, 20, { align: 'center' });
+    doc.setFontSize(12);
+    doc.text('Order Invoice', 105, 28, { align: 'center' });
+    
+    // Line
+    doc.setLineWidth(0.5);
+    doc.line(20, 35, 190, 35);
+    
+    // Order info
+    doc.setFontSize(11);
+    doc.text(`Order ID: ${order.id.slice(0, 8).toUpperCase()}`, 20, 45);
+    doc.text(`Date: ${format(new Date(order.created_at), 'dd/MM/yyyy - HH:mm')}`, 20, 52);
+    
+    // Store info
+    doc.setFontSize(12);
+    doc.text('Store Information:', 20, 65);
+    doc.setFontSize(10);
+    doc.text(`Name: ${order.stores?.name || 'N/A'}`, 25, 72);
+    if (order.stores?.address) doc.text(`Address: ${order.stores.address}`, 25, 79);
+    if (order.stores?.phone) doc.text(`Phone: ${order.stores.phone}`, 25, 86);
+    
+    // Delivery info
+    doc.setFontSize(12);
+    doc.text('Delivery Information:', 20, 100);
+    doc.setFontSize(10);
+    doc.text(`Address: ${order.delivery_address}`, 25, 107);
+    if (order.notes) doc.text(`Notes: ${order.notes}`, 25, 114);
+    
+    // Products table header
+    let yPos = order.notes ? 130 : 125;
+    doc.setFontSize(12);
+    doc.text('Products:', 20, yPos);
+    yPos += 8;
+    
+    doc.setFillColor(240, 240, 240);
+    doc.rect(20, yPos - 5, 170, 8, 'F');
+    doc.setFontSize(10);
+    doc.text('Product', 25, yPos);
+    doc.text('Qty', 120, yPos);
+    doc.text('Price', 145, yPos);
+    doc.text('Total', 170, yPos);
+    yPos += 8;
+    
+    // Products
+    order.order_items?.forEach((item: any) => {
+      doc.text(item.product_name.substring(0, 35), 25, yPos);
+      doc.text(String(item.quantity), 120, yPos);
+      doc.text(`${item.unit_price} SAR`, 145, yPos);
+      doc.text(`${(item.unit_price * item.quantity).toFixed(2)} SAR`, 170, yPos);
+      yPos += 7;
+    });
+    
+    // Totals
+    yPos += 5;
+    doc.line(20, yPos, 190, yPos);
+    yPos += 8;
+    doc.text(`Subtotal: ${subtotal.toFixed(2)} SAR`, 145, yPos);
+    yPos += 7;
+    doc.text(`Delivery Fee: ${Number(order.delivery_fee).toFixed(2)} SAR`, 145, yPos);
+    yPos += 7;
+    doc.setFontSize(12);
+    doc.text(`Total: ${Number(order.total_amount).toFixed(2)} SAR`, 145, yPos);
+    
+    // Footer
+    yPos += 20;
+    doc.setFontSize(10);
+    doc.text('Thank you for using Waslni!', 105, yPos, { align: 'center' });
+    
+    doc.save(`invoice-${order.id.slice(0, 8).toUpperCase()}.pdf`);
+    toast.success('تم تحميل الفاتورة');
+  };
+
   return (
     <div className="min-h-screen bg-background">
       <CustomerHeader />
@@ -293,9 +379,13 @@ export default function OrderTracking() {
                 </p>
               </div>
               <div className="flex items-center gap-2">
+                <Button variant="outline" size="sm" onClick={downloadInvoicePDF}>
+                  <Download className="h-4 w-4 ml-1" />
+                  تحميل PDF
+                </Button>
                 <Button variant="outline" size="sm" onClick={printInvoice}>
                   <Printer className="h-4 w-4 ml-1" />
-                  طباعة الفاتورة
+                  طباعة
                 </Button>
                 {order.status === 'cancelled' ? (
                   <Badge variant="destructive" className="text-base px-4 py-1">
