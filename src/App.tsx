@@ -14,6 +14,7 @@ import Products from "./pages/admin/Products";
 import Orders from "./pages/admin/Orders";
 import Drivers from "./pages/admin/Drivers";
 import Settings from "./pages/admin/Settings";
+import Reports from "./pages/admin/Reports";
 // Customer pages
 import Home from "./pages/customer/Home";
 import StoreDetail from "./pages/customer/StoreDetail";
@@ -51,6 +52,7 @@ const App = () => (
                 <Route path="products" element={<Products />} />
                 <Route path="orders" element={<Orders />} />
                 <Route path="drivers" element={<Drivers />} />
+                <Route path="reports" element={<Reports />} />
                 <Route path="settings" element={<Settings />} />
               </Route>
               

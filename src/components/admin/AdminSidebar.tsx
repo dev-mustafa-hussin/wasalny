@@ -22,6 +22,7 @@ import {
   Settings,
   LogOut,
   Truck,
+  FileText,
 } from 'lucide-react';
 
 const menuItems = [
@@ -30,6 +31,7 @@ const menuItems = [
   { title: 'المنتجات', url: '/admin/products', icon: Package },
   { title: 'الطلبات', url: '/admin/orders', icon: ShoppingCart },
   { title: 'المندوبين', url: '/admin/drivers', icon: Users },
+  { title: 'التقارير', url: '/admin/reports', icon: FileText },
   { title: 'الإعدادات', url: '/admin/settings', icon: Settings },
 ];
 
