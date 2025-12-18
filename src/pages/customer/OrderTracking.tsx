@@ -12,6 +12,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Separator } from '@/components/ui/separator';
 import { StarRating } from '@/components/ui/star-rating';
 import { ETACard } from '@/components/customer/ETACard';
+import { CustomerOrderMap } from '@/components/customer/CustomerOrderMap';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -429,6 +430,15 @@ export default function OrderTracking() {
 
             {/* ETA Card - Show when driver is on the way */}
             <ETACard
+              orderId={order.id}
+              orderStatus={order.status}
+              deliveryLat={order.delivery_lat}
+              deliveryLng={order.delivery_lng}
+              driverId={order.driver_id}
+            />
+
+            {/* Live Map - Show when driver is on the way */}
+            <CustomerOrderMap
               orderId={order.id}
               orderStatus={order.status}
               deliveryLat={order.delivery_lat}
