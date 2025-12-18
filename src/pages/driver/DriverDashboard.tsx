@@ -18,9 +18,12 @@ import {
   User,
   LogOut,
   Phone,
-  Map
+  Map,
+  ChevronDown,
+  ChevronUp
 } from 'lucide-react';
 import { useDriverGPS } from '@/hooks/useDriverGPS';
+import { DriverNavigationMap } from '@/components/driver/DriverNavigationMap';
 
 interface Order {
   id: string;
@@ -59,6 +62,7 @@ export default function DriverDashboard() {
   const [loading, setLoading] = useState(true);
   const [todayEarnings, setTodayEarnings] = useState(0);
   const [completedToday, setCompletedToday] = useState(0);
+  const [expandedOrderId, setExpandedOrderId] = useState<string | null>(null);
 
   const { location, isTracking, startTracking, stopTracking, error: gpsError } = useDriverGPS({
     driverId: driverInfo?.id || '',
@@ -495,18 +499,33 @@ export default function DriverDashboard() {
                         </Button>
                       )}
                       <Button 
-                        variant="outline" 
-                        size="icon"
-                        onClick={() => {
-                          window.open(
-                            `https://www.google.com/maps/dir/?api=1&destination=${order.delivery_lat},${order.delivery_lng}`,
-                            '_blank'
-                          );
-                        }}
+                        variant="outline"
+                        onClick={() => setExpandedOrderId(
+                          expandedOrderId === order.id ? null : order.id
+                        )}
+                        className="gap-1"
                       >
                         <Map className="w-4 h-4" />
+                        {expandedOrderId === order.id ? (
+                          <ChevronUp className="w-4 h-4" />
+                        ) : (
+                          <ChevronDown className="w-4 h-4" />
+                        )}
                       </Button>
                     </div>
+
+                    {/* Navigation Map */}
+                    {expandedOrderId === order.id && order.delivery_lat && order.delivery_lng && (
+                      <div className="pt-3">
+                        <DriverNavigationMap
+                          deliveryLat={order.delivery_lat}
+                          deliveryLng={order.delivery_lng}
+                          deliveryAddress={order.delivery_address}
+                          storeName={order.store.name}
+                          storeAddress={order.store.address || undefined}
+                        />
+                      </div>
+                    )}
                   </CardContent>
                 </Card>
               ))}
