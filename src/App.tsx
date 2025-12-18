@@ -30,6 +30,7 @@ import DriverDashboard from "./pages/driver/DriverDashboard";
 import DriverEarnings from "./pages/driver/DriverEarnings";
 import DriverHistory from "./pages/driver/DriverHistory";
 import DriverSettings from "./pages/driver/DriverSettings";
+import DriverRatings from "./pages/driver/DriverRatings";
 
 const queryClient = new QueryClient();
 
@@ -56,6 +57,7 @@ const App = () => (
               <Route path="/driver" element={<DriverDashboard />} />
               <Route path="/driver/earnings" element={<DriverEarnings />} />
               <Route path="/driver/history" element={<DriverHistory />} />
+              <Route path="/driver/ratings" element={<DriverRatings />} />
               <Route path="/driver/settings" element={<DriverSettings />} />
               
               {/* Admin Routes */}

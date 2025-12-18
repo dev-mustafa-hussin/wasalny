@@ -15,7 +15,8 @@ import {
   Filter,
   X,
   FileDown,
-  Mail
+  Mail,
+  Truck
 } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
@@ -28,6 +29,7 @@ import jsPDF from 'jspdf';
 import 'jspdf-autotable';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import EmailStats from '@/components/admin/EmailStats';
+import DriversPerformance from '@/components/admin/DriversPerformance';
 
 interface OrderData {
   id: string;
@@ -290,7 +292,7 @@ export default function Reports() {
           <FileText className="h-6 w-6" />
           التقارير
         </h1>
-        <p className="text-muted-foreground">تقارير تفصيلية للطلبات والإيرادات والإيميلات</p>
+        <p className="text-muted-foreground">تقارير تفصيلية للطلبات والإيرادات وأداء المندوبين</p>
       </div>
 
       <Tabs defaultValue="orders" className="space-y-6">
@@ -298,6 +300,10 @@ export default function Reports() {
           <TabsTrigger value="orders" className="gap-2">
             <ShoppingCart className="h-4 w-4" />
             تقارير الطلبات
+          </TabsTrigger>
+          <TabsTrigger value="drivers" className="gap-2">
+            <Truck className="h-4 w-4" />
+            أداء المندوبين
           </TabsTrigger>
           <TabsTrigger value="emails" className="gap-2">
             <Mail className="h-4 w-4" />
@@ -651,6 +657,10 @@ export default function Reports() {
           </CardContent>
         </Card>
       </div>
+        </TabsContent>
+
+        <TabsContent value="drivers">
+          <DriversPerformance />
         </TabsContent>
 
         <TabsContent value="emails">
