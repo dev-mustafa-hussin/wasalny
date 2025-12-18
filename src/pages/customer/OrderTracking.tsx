@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { ArrowRight, Package, Clock, CheckCircle, Truck, XCircle, ChefHat, MapPin, Phone, Loader2, Star, Printer, Download } from 'lucide-react';
+import { ArrowRight, Package, Clock, CheckCircle, Truck, XCircle, ChefHat, MapPin, Phone, Loader2, Star, Printer, Download, UserCheck } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { CustomerHeader } from '@/components/customer/CustomerHeader';
 import { useAuth } from '@/hooks/useAuth';
@@ -14,6 +14,7 @@ import { StarRating } from '@/components/ui/star-rating';
 import { ETACard } from '@/components/customer/ETACard';
 import { CustomerOrderMap } from '@/components/customer/CustomerOrderMap';
 import { PushNotificationToggle } from '@/components/customer/PushNotificationToggle';
+import { DriverRatingDialog } from '@/components/customer/DriverRatingDialog';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -48,6 +49,8 @@ export default function OrderTracking() {
   const [isCancelling, setIsCancelling] = useState(false);
   const [rating, setRating] = useState(0);
   const [isSubmittingRating, setIsSubmittingRating] = useState(false);
+  const [showDriverRatingDialog, setShowDriverRatingDialog] = useState(false);
+  const [driverRatingExists, setDriverRatingExists] = useState(false);
 
   const { data: order, isLoading } = useQuery({
     queryKey: ['order-tracking', id],
@@ -66,6 +69,45 @@ export default function OrderTracking() {
       return data;
     },
     enabled: !!id && !!user,
+  });
+
+  // Check if driver rating exists
+  const { data: driverRating, refetch: refetchDriverRating } = useQuery({
+    queryKey: ['driver-rating', id],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('driver_ratings')
+        .select('*')
+        .eq('order_id', id)
+        .maybeSingle();
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!id && !!order?.driver_id && order?.status === 'delivered',
+  });
+
+  // Fetch driver info for rating dialog
+  const { data: driverInfo } = useQuery({
+    queryKey: ['driver-info', order?.driver_id],
+    queryFn: async () => {
+      if (!order?.driver_id) return null;
+      const { data: driver } = await supabase
+        .from('drivers')
+        .select('id, user_id')
+        .eq('id', order.driver_id)
+        .maybeSingle();
+      
+      if (!driver) return null;
+
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('full_name')
+        .eq('user_id', driver.user_id)
+        .maybeSingle();
+
+      return { id: driver.id, name: profile?.full_name };
+    },
+    enabled: !!order?.driver_id,
   });
 
   // Real-time subscription for order updates
@@ -538,6 +580,55 @@ export default function OrderTracking() {
                   )}
                 </CardContent>
               </Card>
+            )}
+
+            {/* Driver Rating Card - Show only for delivered orders with a driver */}
+            {order.status === 'delivered' && order.driver_id && driverInfo && (
+              <Card className="border-green-500/50 bg-green-500/5">
+                <CardHeader>
+                  <CardTitle className="text-lg flex items-center gap-2">
+                    <UserCheck className="h-5 w-5 text-green-500" />
+                    {driverRating ? 'تقييمك للمندوب' : 'قيّم المندوب'}
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  {driverRating ? (
+                    <div className="text-center space-y-2">
+                      <StarRating value={driverRating.rating} readonly size="lg" />
+                      {driverRating.comment && (
+                        <p className="text-sm text-muted-foreground">"{driverRating.comment}"</p>
+                      )}
+                      <p className="text-muted-foreground mt-2">شكراً لتقييمك للمندوب!</p>
+                    </div>
+                  ) : (
+                    <div className="space-y-4">
+                      <p className="text-muted-foreground">
+                        كيف كانت تجربتك مع المندوب {driverInfo.name || ''}؟
+                      </p>
+                      <Button
+                        className="w-full"
+                        variant="outline"
+                        onClick={() => setShowDriverRatingDialog(true)}
+                      >
+                        <Star className="h-4 w-4 ml-2" />
+                        قيّم المندوب
+                      </Button>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            )}
+
+            {/* Driver Rating Dialog */}
+            {order.driver_id && driverInfo && (
+              <DriverRatingDialog
+                open={showDriverRatingDialog}
+                onOpenChange={setShowDriverRatingDialog}
+                orderId={order.id}
+                driverId={driverInfo.id}
+                driverName={driverInfo.name}
+                onRatingSubmitted={() => refetchDriverRating()}
+              />
             )}
 
             {/* Order Details */}
