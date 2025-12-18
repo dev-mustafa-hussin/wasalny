@@ -16,7 +16,8 @@ import {
   X,
   FileDown,
   Mail,
-  Truck
+  Truck,
+  MapPin
 } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
@@ -30,6 +31,7 @@ import 'jspdf-autotable';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import EmailStats from '@/components/admin/EmailStats';
 import DriversPerformance from '@/components/admin/DriversPerformance';
+import OrdersHeatmap from '@/components/admin/OrdersHeatmap';
 
 interface OrderData {
   id: string;
@@ -300,6 +302,10 @@ export default function Reports() {
           <TabsTrigger value="orders" className="gap-2">
             <ShoppingCart className="h-4 w-4" />
             تقارير الطلبات
+          </TabsTrigger>
+          <TabsTrigger value="heatmap" className="gap-2">
+            <MapPin className="h-4 w-4" />
+            خريطة النشاط
           </TabsTrigger>
           <TabsTrigger value="drivers" className="gap-2">
             <Truck className="h-4 w-4" />
@@ -657,6 +663,10 @@ export default function Reports() {
           </CardContent>
         </Card>
       </div>
+        </TabsContent>
+
+        <TabsContent value="heatmap">
+          <OrdersHeatmap />
         </TabsContent>
 
         <TabsContent value="drivers">
