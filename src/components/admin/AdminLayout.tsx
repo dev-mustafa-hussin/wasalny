@@ -3,11 +3,15 @@ import { Outlet, useNavigate } from 'react-router-dom';
 import { SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar';
 import { AdminSidebar } from './AdminSidebar';
 import { useAuth } from '@/hooks/useAuth';
+import { useOrderNotifications } from '@/hooks/useOrderNotifications';
 import { Loader2 } from 'lucide-react';
 
 export function AdminLayout() {
   const { user, loading, userRole } = useAuth();
   const navigate = useNavigate();
+  
+  // Subscribe to real-time order notifications
+  useOrderNotifications();
 
   useEffect(() => {
     if (!loading && !user) {
