@@ -11,6 +11,7 @@ import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Separator } from '@/components/ui/separator';
 import { StarRating } from '@/components/ui/star-rating';
+import { ETACard } from '@/components/customer/ETACard';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -425,6 +426,15 @@ export default function OrderTracking() {
                 ) : null}
               </div>
             </div>
+
+            {/* ETA Card - Show when driver is on the way */}
+            <ETACard
+              orderId={order.id}
+              orderStatus={order.status}
+              deliveryLat={order.delivery_lat}
+              deliveryLng={order.delivery_lng}
+              driverId={order.driver_id}
+            />
 
             {/* Status Timeline */}
             {order.status !== 'cancelled' && (
