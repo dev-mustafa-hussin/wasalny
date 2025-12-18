@@ -6,9 +6,10 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
-import { Mail, Palette, Save, Loader2, Type, MessageSquare } from 'lucide-react';
+import { Mail, Palette, Save, Loader2, Type, MessageSquare, Eye } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Separator } from '@/components/ui/separator';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 interface EmailTemplate {
   id: string;
@@ -42,6 +43,7 @@ export default function EmailTemplates() {
   const [template, setTemplate] = useState<EmailTemplate | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [previewStatus, setPreviewStatus] = useState('delivered');
   const { toast } = useToast();
 
   useEffect(() => {
@@ -100,6 +102,25 @@ export default function EmailTemplates() {
     }
   };
 
+  const getPreviewMessage = () => {
+    if (!template) return '';
+    const customMessageKey = `custom_message_${previewStatus}` as keyof EmailTemplate;
+    const customMessage = template[customMessageKey] as string | null;
+    const statusInfo = statusMessages.find(s => s.key === previewStatus);
+    return customMessage || statusInfo?.defaultMessage || '';
+  };
+
+  const getPreviewStatusLabel = () => {
+    return statusMessages.find(s => s.key === previewStatus)?.label || previewStatus;
+  };
+
+  const getPreviewSubject = () => {
+    if (!template) return '';
+    return template.subject_template
+      .replace('{order_id}', 'ABC12345')
+      .replace('{status}', getPreviewStatusLabel());
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center py-12">
@@ -135,7 +156,7 @@ export default function EmailTemplates() {
       </div>
 
       <Tabs defaultValue="general" className="space-y-4">
-        <TabsList className="grid w-full grid-cols-3">
+        <TabsList className="grid w-full grid-cols-4">
           <TabsTrigger value="general">
             <Type className="h-4 w-4 ml-2" />
             عام
@@ -147,6 +168,10 @@ export default function EmailTemplates() {
           <TabsTrigger value="messages">
             <MessageSquare className="h-4 w-4 ml-2" />
             الرسائل
+          </TabsTrigger>
+          <TabsTrigger value="preview">
+            <Eye className="h-4 w-4 ml-2" />
+            معاينة
           </TabsTrigger>
         </TabsList>
 
@@ -285,6 +310,103 @@ export default function EmailTemplates() {
                   />
                 </div>
               ))}
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="preview" className="space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle>معاينة الإيميل</CardTitle>
+              <CardDescription>شاهد كيف سيظهر الإيميل للعميل</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="flex items-center gap-4">
+                <Label>اختر الحالة للمعاينة:</Label>
+                <Select value={previewStatus} onValueChange={setPreviewStatus}>
+                  <SelectTrigger className="w-48">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {statusMessages.map((status) => (
+                      <SelectItem key={status.key} value={status.key}>
+                        {status.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <Separator />
+
+              {/* Email Subject Preview */}
+              <div className="bg-muted/50 p-3 rounded-lg">
+                <p className="text-sm text-muted-foreground mb-1">عنوان الإيميل:</p>
+                <p className="font-medium">{getPreviewSubject()}</p>
+              </div>
+
+              {/* Full Email Preview */}
+              <div className="border rounded-xl overflow-hidden shadow-lg" dir="rtl">
+                {/* Header */}
+                <div 
+                  className="p-6 text-center"
+                  style={{ background: `linear-gradient(135deg, ${template.primary_color}, ${template.secondary_color})` }}
+                >
+                  <h1 className="text-white font-bold text-xl">{template.header_text}</h1>
+                </div>
+
+                {/* Content */}
+                <div className="bg-white p-6 space-y-4">
+                  <p className="text-lg text-gray-800">مرحباً أحمد محمد،</p>
+                  <p className="text-gray-600">تم تحديث حالة طلبك:</p>
+
+                  {/* Status Badge */}
+                  <div className="text-center py-2">
+                    <span 
+                      className="inline-block px-5 py-2 rounded-full font-bold text-base"
+                      style={{ 
+                        backgroundColor: `${template.primary_color}22`,
+                        color: template.primary_color 
+                      }}
+                    >
+                      {getPreviewStatusLabel()}
+                    </span>
+                  </div>
+
+                  {/* Order Info */}
+                  <div className="bg-gray-50 p-4 rounded-lg space-y-2">
+                    <p className="text-gray-600">
+                      <strong>رقم الطلب:</strong> ABC12345
+                    </p>
+                    <p className="text-gray-600">
+                      <strong>المتجر:</strong> مطعم البيت السعودي
+                    </p>
+                    <p className="text-gray-600">
+                      <strong>الحالة الجديدة:</strong> {getPreviewStatusLabel()}
+                    </p>
+                  </div>
+
+                  {/* Status Message */}
+                  {getPreviewMessage() && (
+                    <div 
+                      className="text-center p-4 rounded-lg"
+                      style={{ backgroundColor: '#f0f9ff', color: '#1e40af' }}
+                    >
+                      {getPreviewMessage()}
+                    </div>
+                  )}
+                </div>
+
+                {/* Footer */}
+                <div className="bg-gray-50 border-t p-4 text-center text-gray-500 text-sm space-y-1">
+                  <p>{template.footer_text}</p>
+                  <p>{template.footer_text_en}</p>
+                </div>
+              </div>
+
+              <p className="text-xs text-muted-foreground text-center">
+                هذه معاينة تقريبية. قد يختلف الشكل النهائي قليلاً حسب برنامج البريد الإلكتروني المستخدم.
+              </p>
             </CardContent>
           </Card>
         </TabsContent>
