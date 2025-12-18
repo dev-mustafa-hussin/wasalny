@@ -11,6 +11,7 @@ import { Switch } from '@/components/ui/switch';
 import { useToast } from '@/hooks/use-toast';
 import { Plus, Pencil, Trash2, Package } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
+import { ImageUpload } from '@/components/admin/ImageUpload';
 
 interface Product {
   id: string;
@@ -211,11 +212,11 @@ export default function Products() {
                 />
               </div>
               <div className="space-y-2">
-                <Label>رابط الصورة</Label>
-                <Input
+                <Label>صورة المنتج</Label>
+                <ImageUpload
                   value={formData.image_url}
-                  onChange={(e) => setFormData({ ...formData, image_url: e.target.value })}
-                  placeholder="https://..."
+                  onChange={(url) => setFormData({ ...formData, image_url: url || '' })}
+                  folder="products"
                 />
               </div>
               <div className="flex items-center justify-between">

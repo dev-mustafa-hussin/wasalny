@@ -11,6 +11,7 @@ import { Switch } from '@/components/ui/switch';
 import { useToast } from '@/hooks/use-toast';
 import { Plus, Pencil, Trash2, Store, MapPin, Phone } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
+import { ImageUpload } from '@/components/admin/ImageUpload';
 
 interface StoreType {
   id: string;
@@ -198,11 +199,11 @@ export default function Stores() {
                 />
               </div>
               <div className="space-y-2">
-                <Label>رابط الصورة</Label>
-                <Input
+                <Label>صورة المتجر</Label>
+                <ImageUpload
                   value={formData.image_url}
-                  onChange={(e) => setFormData({ ...formData, image_url: e.target.value })}
-                  placeholder="https://..."
+                  onChange={(url) => setFormData({ ...formData, image_url: url || '' })}
+                  folder="stores"
                 />
               </div>
               <div className="space-y-2">
