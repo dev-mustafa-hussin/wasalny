@@ -9,6 +9,56 @@ const isSoundEnabled = (): boolean => {
   return stored !== 'false'; // Default to true
 };
 
+// Check if push notifications are enabled
+const isPushEnabled = (): boolean => {
+  const stored = localStorage.getItem('orderPushNotifications');
+  return stored !== 'false'; // Default to true
+};
+
+// Request push notification permission
+export const requestPushPermission = async (): Promise<boolean> => {
+  if (!('Notification' in window)) {
+    console.log('Browser does not support notifications');
+    return false;
+  }
+
+  if (Notification.permission === 'granted') {
+    return true;
+  }
+
+  if (Notification.permission !== 'denied') {
+    const permission = await Notification.requestPermission();
+    return permission === 'granted';
+  }
+
+  return false;
+};
+
+// Send push notification
+const sendPushNotification = (title: string, body: string) => {
+  if (!isPushEnabled()) return;
+  if (!('Notification' in window)) return;
+  if (Notification.permission !== 'granted') return;
+
+  try {
+    const notification = new Notification(title, {
+      body,
+      icon: '/favicon.ico',
+      badge: '/favicon.ico',
+      tag: 'new-order',
+      requireInteraction: true,
+    } as NotificationOptions);
+
+    notification.onclick = () => {
+      window.focus();
+      window.location.href = '/admin/orders';
+      notification.close();
+    };
+  } catch (e) {
+    console.log('Push notification error:', e);
+  }
+};
+
 // Generate notification sound using Web Audio API
 const playNotificationSound = () => {
   if (!isSoundEnabled()) return;
@@ -49,6 +99,13 @@ const playNotificationSound = () => {
 export function useOrderNotifications() {
   const { userRole } = useAuth();
 
+  // Request push permission on mount for admin users
+  useEffect(() => {
+    if (userRole === 'admin' && isPushEnabled()) {
+      requestPushPermission();
+    }
+  }, [userRole]);
+
   const handleNewOrder = useCallback(async (payload: any) => {
     console.log('New order received:', payload);
     
@@ -65,6 +122,13 @@ export function useOrderNotifications() {
     const storeName = store?.name || 'متجر';
     const amount = Number(payload.new.total_amount).toFixed(2);
 
+    // Send push notification
+    sendPushNotification(
+      '🛵 طلب جديد!',
+      `طلب جديد من ${storeName} بقيمة ${amount} ر.س`
+    );
+
+    // Show toast notification
     toast.success('طلب جديد!', {
       description: `طلب جديد من ${storeName} بقيمة ${amount} ر.س`,
       duration: 10000,
