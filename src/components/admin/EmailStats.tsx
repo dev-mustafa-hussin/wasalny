@@ -1,10 +1,13 @@
 import { useEffect, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart';
 import { BarChart, Bar, XAxis, YAxis, PieChart, Pie, Cell, LineChart, Line } from 'recharts';
-import { Mail, MailOpen, TrendingUp, Send } from 'lucide-react';
+import { Mail, MailOpen, TrendingUp, Send, FileDown } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import jsPDF from 'jspdf';
+import 'jspdf-autotable';
 
 interface EmailLog {
   id: string;
@@ -115,27 +118,92 @@ export default function EmailStats() {
     color: COLORS[index % COLORS.length],
   }));
 
+  const exportToPDF = () => {
+    const doc = new jsPDF();
+    
+    // Title
+    doc.setFontSize(18);
+    doc.text('Email Statistics Report - Waslni', 105, 15, { align: 'center' });
+    
+    // Date range
+    doc.setFontSize(10);
+    doc.text(`Period: Last ${period} days`, 105, 25, { align: 'center' });
+    doc.text(`Generated: ${new Date().toLocaleDateString('en-US')}`, 105, 32, { align: 'center' });
+    
+    // Summary section
+    doc.setFontSize(14);
+    doc.text('Summary', 14, 45);
+    doc.setFontSize(10);
+    doc.text(`Total Emails Sent: ${totalEmails}`, 14, 55);
+    doc.text(`Test Emails: ${testEmails}`, 14, 62);
+    doc.text(`Opened Emails: ${openedEmails}`, 14, 69);
+    doc.text(`Open Rate: ${openRate.toFixed(1)}%`, 14, 76);
+    doc.text(`Average Daily Emails: ${(totalEmails / parseInt(period)).toFixed(1)}`, 14, 83);
+    
+    // Status breakdown
+    doc.setFontSize(14);
+    doc.text('Emails by Status', 14, 100);
+    
+    const statusData = statusBreakdown.map(s => [s.label, s.count.toString()]);
+    (doc as any).autoTable({
+      head: [['Status', 'Count']],
+      body: statusData,
+      startY: 105,
+      styles: { fontSize: 9 },
+      headStyles: { fillColor: [59, 130, 246] },
+    });
+    
+    // Recent emails
+    const currentY = (doc as any).lastAutoTable.finalY + 15;
+    doc.setFontSize(14);
+    doc.text('Recent Emails', 14, currentY);
+    
+    const recentData = emailLogs.slice(0, 15).map(e => [
+      e.recipient_email.length > 25 ? e.recipient_email.slice(0, 25) + '...' : e.recipient_email,
+      statusLabels[e.status] || e.status,
+      new Date(e.sent_at).toLocaleDateString('en-US'),
+      e.opened_at ? 'Yes' : 'No',
+      e.is_test ? 'Test' : 'Real',
+    ]);
+    
+    (doc as any).autoTable({
+      head: [['Recipient', 'Status', 'Sent', 'Opened', 'Type']],
+      body: recentData,
+      startY: currentY + 5,
+      styles: { fontSize: 8 },
+      headStyles: { fillColor: [59, 130, 246] },
+    });
+    
+    doc.save(`email-stats-${new Date().toISOString().split('T')[0]}.pdf`);
+  };
+
   if (loading) {
     return <div className="text-center py-8">جاري التحميل...</div>;
   }
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between flex-wrap gap-4">
         <h2 className="text-xl font-bold flex items-center gap-2">
           <Mail className="h-5 w-5" />
           إحصائيات البريد الإلكتروني
         </h2>
-        <Select value={period} onValueChange={setPeriod}>
-          <SelectTrigger className="w-36">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="7">آخر 7 أيام</SelectItem>
-            <SelectItem value="30">آخر 30 يوم</SelectItem>
-            <SelectItem value="90">آخر 90 يوم</SelectItem>
-          </SelectContent>
-        </Select>
+        <div className="flex items-center gap-3">
+          <Select value={period} onValueChange={setPeriod}>
+            <SelectTrigger className="w-36">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="7">آخر 7 أيام</SelectItem>
+              <SelectItem value="30">آخر 30 يوم</SelectItem>
+              <SelectItem value="90">آخر 90 يوم</SelectItem>
+            </SelectContent>
+          </Select>
+          <Button onClick={exportToPDF} variant="outline" size="sm">
+            <FileDown className="h-4 w-4 ml-2" />
+            PDF
+          </Button>
+        </div>
       </div>
 
       {/* Summary Cards */}
