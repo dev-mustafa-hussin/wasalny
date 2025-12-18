@@ -13,7 +13,8 @@ import {
   ShoppingCart,
   Calendar,
   Filter,
-  X
+  X,
+  FileDown
 } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
@@ -22,6 +23,8 @@ import { Calendar as CalendarComponent } from '@/components/ui/calendar';
 import { format, differenceInDays } from 'date-fns';
 import { ar } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
+import jsPDF from 'jspdf';
+import 'jspdf-autotable';
 
 interface OrderData {
   id: string;
@@ -216,6 +219,63 @@ export default function Reports() {
     link.click();
   };
 
+  const getStatusLabel = (status: string) => {
+    const labels: Record<string, string> = {
+      pending: 'معلق',
+      confirmed: 'مؤكد',
+      preparing: 'قيد التحضير',
+      out_for_delivery: 'في الطريق',
+      delivered: 'تم التوصيل',
+      cancelled: 'ملغي',
+    };
+    return labels[status] || status;
+  };
+
+  const exportToPDF = () => {
+    const doc = new jsPDF();
+    
+    // Add title
+    doc.setFontSize(18);
+    doc.text('Orders Report - Waslni', 105, 15, { align: 'center' });
+    
+    // Add date range
+    doc.setFontSize(10);
+    const dateRange = isCustomDateRange 
+      ? `${format(startDate!, 'dd/MM/yyyy')} - ${format(endDate!, 'dd/MM/yyyy')}`
+      : `Last ${period} days`;
+    doc.text(`Period: ${dateRange}`, 105, 25, { align: 'center' });
+    
+    // Add summary
+    doc.setFontSize(12);
+    doc.text('Summary:', 14, 40);
+    doc.setFontSize(10);
+    doc.text(`Total Revenue: ${totalRevenue.toFixed(2)} SAR`, 14, 50);
+    doc.text(`Total Orders: ${totalOrders}`, 14, 57);
+    doc.text(`Completed Orders: ${completedOrders}`, 14, 64);
+    doc.text(`Cancelled Orders: ${cancelledOrders}`, 14, 71);
+    doc.text(`Average Order Value: ${averageOrderValue.toFixed(2)} SAR`, 14, 78);
+    doc.text(`Completion Rate: ${completionRate.toFixed(1)}%`, 14, 85);
+    
+    // Add orders table
+    const tableData = orders.map(o => [
+      new Date(o.created_at).toLocaleDateString('en-US'),
+      o.id.slice(0, 8),
+      `${o.total_amount} SAR`,
+      `${o.delivery_fee} SAR`,
+      getStatusLabel(o.status),
+    ]);
+
+    (doc as any).autoTable({
+      head: [['Date', 'Order ID', 'Amount', 'Delivery Fee', 'Status']],
+      body: tableData,
+      startY: 95,
+      styles: { fontSize: 8 },
+      headStyles: { fillColor: [59, 130, 246] },
+    });
+
+    doc.save(`orders-report-${new Date().toISOString().split('T')[0]}.pdf`);
+  };
+
   if (loading) {
     return <div className="text-center py-8">جاري التحميل...</div>;
   }
@@ -252,9 +312,13 @@ export default function Reports() {
               {isCustomDateRange && <SelectItem value="custom">نطاق مخصص</SelectItem>}
             </SelectContent>
           </Select>
-          <Button onClick={exportToCSV} variant="outline">
+          <Button onClick={exportToCSV} variant="outline" size="sm">
             <Download className="h-4 w-4 ml-2" />
-            تصدير CSV
+            CSV
+          </Button>
+          <Button onClick={exportToPDF} variant="outline" size="sm">
+            <FileDown className="h-4 w-4 ml-2" />
+            PDF
           </Button>
         </div>
       </div>
