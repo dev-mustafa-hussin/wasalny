@@ -3,6 +3,13 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { supabase } from '@/integrations/supabase/client';
 import { Store, Package, ShoppingCart, Users, TrendingUp, Clock, Star } from 'lucide-react';
 import { Progress } from '@/components/ui/progress';
+import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart';
+import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer } from 'recharts';
+
+interface DailyRevenue {
+  date: string;
+  revenue: number;
+}
 
 interface Stats {
   totalStores: number;
@@ -14,6 +21,7 @@ interface Stats {
   averageRating: number;
   ratedOrders: number;
   ratingBreakdown: { rating: number; count: number }[];
+  dailyRevenue: DailyRevenue[];
 }
 
 export default function Dashboard() {
@@ -27,6 +35,7 @@ export default function Dashboard() {
     averageRating: 0,
     ratedOrders: 0,
     ratingBreakdown: [],
+    dailyRevenue: [],
   });
   const [loading, setLoading] = useState(true);
 
@@ -38,7 +47,12 @@ export default function Dashboard() {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
 
-    const [stores, products, orders, drivers, pending, todayData, ratedOrdersData] = await Promise.all([
+    // Get date 7 days ago
+    const sevenDaysAgo = new Date();
+    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 6);
+    sevenDaysAgo.setHours(0, 0, 0, 0);
+
+    const [stores, products, orders, drivers, pending, todayData, ratedOrdersData, revenueData] = await Promise.all([
       supabase.from('stores').select('id', { count: 'exact', head: true }),
       supabase.from('products').select('id', { count: 'exact', head: true }),
       supabase.from('orders').select('id', { count: 'exact', head: true }),
@@ -46,6 +60,7 @@ export default function Dashboard() {
       supabase.from('orders').select('id', { count: 'exact', head: true }).eq('status', 'pending'),
       supabase.from('orders').select('id', { count: 'exact', head: true }).gte('created_at', today.toISOString()),
       supabase.from('orders').select('rating').not('rating', 'is', null),
+      supabase.from('orders').select('total_amount, created_at').gte('created_at', sevenDaysAgo.toISOString()),
     ]);
 
     // Calculate rating statistics
@@ -61,6 +76,32 @@ export default function Dashboard() {
       count: ratings.filter(r => r.rating === rating).length,
     }));
 
+    // Calculate daily revenue for last 7 days
+    const dailyRevenueMap: Record<string, number> = {};
+    const ordersData = revenueData.data || [];
+    
+    // Initialize all 7 days with 0
+    for (let i = 0; i < 7; i++) {
+      const date = new Date();
+      date.setDate(date.getDate() - (6 - i));
+      const dateStr = date.toLocaleDateString('ar-SA', { weekday: 'short', day: 'numeric' });
+      dailyRevenueMap[dateStr] = 0;
+    }
+
+    // Sum up revenue per day
+    ordersData.forEach(order => {
+      const orderDate = new Date(order.created_at);
+      const dateStr = orderDate.toLocaleDateString('ar-SA', { weekday: 'short', day: 'numeric' });
+      if (dailyRevenueMap[dateStr] !== undefined) {
+        dailyRevenueMap[dateStr] += Number(order.total_amount) || 0;
+      }
+    });
+
+    const dailyRevenue = Object.entries(dailyRevenueMap).map(([date, revenue]) => ({
+      date,
+      revenue,
+    }));
+
     setStats({
       totalStores: stores.count || 0,
       totalProducts: products.count || 0,
@@ -71,6 +112,7 @@ export default function Dashboard() {
       averageRating: avgRating,
       ratedOrders: ratedCount,
       ratingBreakdown: breakdown,
+      dailyRevenue,
     });
     setLoading(false);
   };
@@ -174,21 +216,64 @@ export default function Dashboard() {
         </Card>
 
         <Card>
-          <CardHeader>
-            <CardTitle>مرحباً بك في لوحة تحكم وصلني</CardTitle>
+          <CardHeader className="flex flex-row items-center justify-between pb-2">
+            <CardTitle className="text-lg">إيرادات آخر 7 أيام</CardTitle>
+            <div className="p-2 rounded-lg bg-success">
+              <TrendingUp className="h-4 w-4 text-white" />
+            </div>
           </CardHeader>
-          <CardContent className="text-muted-foreground">
-            <p>من هنا يمكنك:</p>
-            <ul className="list-disc list-inside mt-2 space-y-1">
-              <li>إضافة وإدارة المطاعم والأسواق</li>
-              <li>إدارة المنتجات والقوائم</li>
-              <li>متابعة الطلبات وحالاتها</li>
-              <li>إدارة المندوبين</li>
-              <li>تحديد أسعار التوصيل</li>
-            </ul>
+          <CardContent>
+            <ChartContainer
+              config={{
+                revenue: {
+                  label: "الإيرادات",
+                  color: "hsl(var(--primary))",
+                },
+              }}
+              className="h-[200px] w-full"
+            >
+              <BarChart data={stats.dailyRevenue}>
+                <XAxis 
+                  dataKey="date" 
+                  tick={{ fontSize: 12 }}
+                  tickLine={false}
+                  axisLine={false}
+                />
+                <YAxis
+                  tick={{ fontSize: 12 }}
+                  tickLine={false}
+                  axisLine={false}
+                  tickFormatter={(value) => `${value} ر.س`}
+                />
+                <ChartTooltip
+                  content={<ChartTooltipContent formatter={(value) => `${value} ر.س`} />}
+                />
+                <Bar 
+                  dataKey="revenue" 
+                  fill="hsl(var(--primary))" 
+                  radius={[4, 4, 0, 0]}
+                />
+              </BarChart>
+            </ChartContainer>
           </CardContent>
         </Card>
       </div>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>مرحباً بك في لوحة تحكم وصلني</CardTitle>
+        </CardHeader>
+        <CardContent className="text-muted-foreground">
+          <p>من هنا يمكنك:</p>
+          <ul className="list-disc list-inside mt-2 space-y-1">
+            <li>إضافة وإدارة المطاعم والأسواق</li>
+            <li>إدارة المنتجات والقوائم</li>
+            <li>متابعة الطلبات وحالاتها</li>
+            <li>إدارة المندوبين</li>
+            <li>تحديد أسعار التوصيل</li>
+          </ul>
+        </CardContent>
+      </Card>
     </div>
   );
 }
