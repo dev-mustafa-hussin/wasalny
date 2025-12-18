@@ -21,11 +21,39 @@ const statusLabels: Record<string, { ar: string; en: string }> = {
   picked_up: { ar: "في الطريق", en: "Picked Up" },
 };
 
+const defaultMessages: Record<string, string> = {
+  pending: "تم استلام طلبك وسيتم مراجعته قريباً.",
+  confirmed: "تم تأكيد طلبك وسيبدأ التحضير.",
+  preparing: "طلبك قيد التحضير الآن.",
+  ready: "✅ طلبك جاهز وسيتم تسليمه للمندوب قريباً!",
+  out_for_delivery: "🚗 المندوب في طريقه إليك الآن!",
+  picked_up: "🚗 المندوب في طريقه إليك الآن!",
+  delivered: "🎉 تم توصيل طلبك بنجاح! نتمنى أن تكون راضياً عن الخدمة.",
+  cancelled: "نأسف لإلغاء طلبك. نتمنى خدمتك مرة أخرى.",
+  accepted: "تم قبول طلبك وسيبدأ التحضير قريباً.",
+};
+
 interface OrderNotificationRequest {
   order_id: string;
   new_status: string;
   customer_id: string;
   store_name: string;
+}
+
+interface EmailTemplate {
+  header_text: string;
+  primary_color: string;
+  secondary_color: string;
+  footer_text: string;
+  footer_text_en: string;
+  subject_template: string;
+  custom_message_pending: string | null;
+  custom_message_confirmed: string | null;
+  custom_message_preparing: string | null;
+  custom_message_ready: string | null;
+  custom_message_out_for_delivery: string | null;
+  custom_message_delivered: string | null;
+  custom_message_cancelled: string | null;
 }
 
 const handler = async (req: Request): Promise<Response> => {
@@ -48,10 +76,33 @@ const handler = async (req: Request): Promise<Response> => {
       });
     }
 
-    // Create Supabase client with service role to get user email
+    // Create Supabase client with service role
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
+
+    // Get email template
+    const { data: templateData } = await supabase
+      .from('email_templates')
+      .select('*')
+      .eq('template_key', 'order_status')
+      .maybeSingle();
+
+    const template: EmailTemplate = templateData || {
+      header_text: "وصلني - Waslni",
+      primary_color: "#3b82f6",
+      secondary_color: "#1d4ed8",
+      footer_text: "شكراً لاستخدامك وصلني",
+      footer_text_en: "Thank you for using Waslni",
+      subject_template: "تحديث طلبك #{order_id} - {status}",
+      custom_message_pending: null,
+      custom_message_confirmed: null,
+      custom_message_preparing: null,
+      custom_message_ready: null,
+      custom_message_out_for_delivery: null,
+      custom_message_delivered: null,
+      custom_message_cancelled: null,
+    };
 
     // Get user email from auth
     const { data: userData, error: userError } = await supabase.auth.admin.getUserById(customer_id);
@@ -78,6 +129,16 @@ const handler = async (req: Request): Promise<Response> => {
     const statusInfo = statusLabels[new_status] || { ar: new_status, en: new_status };
     const shortOrderId = order_id.slice(0, 8).toUpperCase();
 
+    // Get custom message for this status or use default
+    const customMessageKey = `custom_message_${new_status}` as keyof EmailTemplate;
+    const customMessage = template[customMessageKey] as string | null;
+    const statusMessage = customMessage || defaultMessages[new_status] || "";
+
+    // Build email subject from template
+    const emailSubject = template.subject_template
+      .replace('{order_id}', shortOrderId)
+      .replace('{status}', statusInfo.ar);
+
     const emailHtml = `
       <!DOCTYPE html>
       <html dir="rtl" lang="ar">
@@ -86,32 +147,27 @@ const handler = async (req: Request): Promise<Response> => {
         <style>
           body { font-family: 'Segoe UI', Tahoma, sans-serif; background: #f5f5f5; margin: 0; padding: 20px; }
           .container { max-width: 500px; margin: 0 auto; background: white; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
-          .header { background: linear-gradient(135deg, #3b82f6, #1d4ed8); color: white; padding: 25px; text-align: center; }
+          .header { background: linear-gradient(135deg, ${template.primary_color}, ${template.secondary_color}); color: white; padding: 25px; text-align: center; }
           .header h1 { margin: 0; font-size: 24px; }
           .content { padding: 25px; }
-          .status-badge { display: inline-block; padding: 10px 20px; border-radius: 50px; font-weight: bold; font-size: 16px; margin: 15px 0; }
-          .status-pending { background: #fef3c7; color: #92400e; }
-          .status-confirmed, .status-accepted { background: #d1fae5; color: #065f46; }
-          .status-preparing { background: #e0e7ff; color: #3730a3; }
-          .status-out_for_delivery, .status-picked_up { background: #dbeafe; color: #1e40af; }
-          .status-delivered, .status-ready { background: #d1fae5; color: #065f46; }
-          .status-cancelled { background: #fee2e2; color: #991b1b; }
+          .status-badge { display: inline-block; padding: 10px 20px; border-radius: 50px; font-weight: bold; font-size: 16px; margin: 15px 0; background: ${template.primary_color}22; color: ${template.primary_color}; }
           .order-info { background: #f9fafb; padding: 15px; border-radius: 8px; margin: 15px 0; }
           .order-info p { margin: 5px 0; color: #4b5563; }
+          .status-message { text-align: center; padding: 15px; margin: 15px 0; background: #f0f9ff; border-radius: 8px; color: #1e40af; }
           .footer { text-align: center; padding: 20px; color: #9ca3af; font-size: 12px; border-top: 1px solid #e5e7eb; }
         </style>
       </head>
       <body>
         <div class="container">
           <div class="header">
-            <h1>وصلني - Waslni</h1>
+            <h1>${template.header_text}</h1>
           </div>
           <div class="content">
             <p style="font-size: 18px; color: #1f2937;">مرحباً ${customerName}،</p>
             <p style="color: #4b5563;">تم تحديث حالة طلبك:</p>
             
             <div style="text-align: center;">
-              <span class="status-badge status-${new_status}">${statusInfo.ar}</span>
+              <span class="status-badge">${statusInfo.ar}</span>
             </div>
             
             <div class="order-info">
@@ -120,27 +176,11 @@ const handler = async (req: Request): Promise<Response> => {
               <p><strong>الحالة الجديدة:</strong> ${statusInfo.ar}</p>
             </div>
             
-            ${new_status === 'delivered' ? `
-              <p style="color: #065f46; text-align: center; font-weight: bold;">
-                🎉 تم توصيل طلبك بنجاح! نتمنى أن تكون راضياً عن الخدمة.
-              </p>
-            ` : new_status === 'out_for_delivery' || new_status === 'picked_up' ? `
-              <p style="color: #1e40af; text-align: center;">
-                🚗 المندوب في طريقه إليك الآن!
-              </p>
-            ` : new_status === 'cancelled' ? `
-              <p style="color: #991b1b; text-align: center;">
-                نأسف لإلغاء طلبك. نتمنى خدمتك مرة أخرى.
-              </p>
-            ` : new_status === 'ready' ? `
-              <p style="color: #065f46; text-align: center;">
-                ✅ طلبك جاهز وسيتم تسليمه للمندوب قريباً!
-              </p>
-            ` : ''}
+            ${statusMessage ? `<div class="status-message">${statusMessage}</div>` : ''}
           </div>
           <div class="footer">
-            <p>شكراً لاستخدامك وصلني</p>
-            <p>Thank you for using Waslni</p>
+            <p>${template.footer_text}</p>
+            <p>${template.footer_text_en}</p>
           </div>
         </div>
       </body>
@@ -150,7 +190,7 @@ const handler = async (req: Request): Promise<Response> => {
     const emailResponse = await resend.emails.send({
       from: "Waslni <onboarding@resend.dev>",
       to: [customerEmail],
-      subject: `تحديث طلبك #${shortOrderId} - ${statusInfo.ar}`,
+      subject: emailSubject,
       html: emailHtml,
     });
 
