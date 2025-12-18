@@ -104,12 +104,24 @@ export function usePushNotifications() {
       // Save subscription to database
       const subscriptionJson = subscription.toJSON();
       
-      // Store in localStorage for now (in production, save to database)
-      localStorage.setItem('pushSubscription', JSON.stringify({
-        endpoint: subscriptionJson.endpoint,
-        keys: subscriptionJson.keys,
-        userId: user.id
-      }));
+      if (subscriptionJson.endpoint && subscriptionJson.keys) {
+        const { error: dbError } = await supabase
+          .from('push_subscriptions')
+          .upsert({
+            user_id: user.id,
+            endpoint: subscriptionJson.endpoint,
+            p256dh_key: subscriptionJson.keys.p256dh || '',
+            auth_key: subscriptionJson.keys.auth || ''
+          }, {
+            onConflict: 'user_id,endpoint'
+          });
+
+        if (dbError) {
+          console.error('Error saving subscription to database:', dbError);
+        } else {
+          console.log('Subscription saved to database');
+        }
+      }
 
       setState(prev => ({
         ...prev,
@@ -129,7 +141,7 @@ export function usePushNotifications() {
 
   // Unsubscribe from push notifications
   const unsubscribe = useCallback(async () => {
-    if (!registration) return false;
+    if (!registration || !user) return false;
 
     setState(prev => ({ ...prev, isLoading: true }));
 
@@ -137,8 +149,17 @@ export function usePushNotifications() {
       const subscription = await registration.pushManager.getSubscription();
       
       if (subscription) {
+        // Remove from database
+        const subscriptionJson = subscription.toJSON();
+        if (subscriptionJson.endpoint) {
+          await supabase
+            .from('push_subscriptions')
+            .delete()
+            .eq('user_id', user.id)
+            .eq('endpoint', subscriptionJson.endpoint);
+        }
+        
         await subscription.unsubscribe();
-        localStorage.removeItem('pushSubscription');
       }
 
       setState(prev => ({
@@ -155,7 +176,7 @@ export function usePushNotifications() {
       setState(prev => ({ ...prev, isLoading: false }));
       return false;
     }
-  }, [registration]);
+  }, [registration, user]);
 
   // Send a local notification (for testing)
   const sendLocalNotification = useCallback(async (title: string, body: string, data?: object) => {
