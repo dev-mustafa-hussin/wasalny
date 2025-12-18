@@ -16,6 +16,7 @@ interface Order {
   delivery_address: string;
   notes: string | null;
   created_at: string;
+  customer_id: string | null;
   stores?: { name: string };
   profiles?: { full_name: string };
 }
@@ -55,6 +56,8 @@ export default function Orders() {
   };
 
   const updateOrderStatus = async (orderId: string, newStatus: string) => {
+    const orderToUpdate = orders.find(o => o.id === orderId);
+    
     const { error } = await supabase
       .from('orders')
       .update({ status: newStatus })
@@ -64,6 +67,23 @@ export default function Orders() {
       toast({ title: 'خطأ', description: 'فشل في تحديث حالة الطلب', variant: 'destructive' });
     } else {
       toast({ title: 'تم', description: 'تم تحديث حالة الطلب' });
+      
+      // Send email notification via edge function
+      if (orderToUpdate?.customer_id) {
+        try {
+          await supabase.functions.invoke('send-order-notification', {
+            body: {
+              order_id: orderId,
+              new_status: newStatus,
+              customer_id: orderToUpdate.customer_id,
+              store_name: orderToUpdate.stores?.name || 'المتجر',
+            },
+          });
+        } catch (notificationError) {
+          console.error('Failed to send notification:', notificationError);
+        }
+      }
+      
       fetchOrders();
     }
   };
