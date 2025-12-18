@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { ArrowRight, Package, Clock, CheckCircle, Truck, XCircle, ChefHat, MapPin, Phone, Loader2, Star } from 'lucide-react';
+import { ArrowRight, Package, Clock, CheckCircle, Truck, XCircle, ChefHat, MapPin, Phone, Loader2, Star, Printer } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { CustomerHeader } from '@/components/customer/CustomerHeader';
 import { useAuth } from '@/hooks/useAuth';
@@ -158,6 +158,107 @@ export default function OrderTracking() {
   const canCancel = order && cancellableStatuses.includes(order.status);
   const currentStep = getCurrentStepIndex();
 
+  const printInvoice = () => {
+    if (!order) return;
+
+    const subtotal = Number(order.total_amount) - Number(order.delivery_fee);
+    const printWindow = window.open('', '_blank');
+    if (!printWindow) {
+      toast.error('يرجى السماح بالنوافذ المنبثقة للطباعة');
+      return;
+    }
+
+    const invoiceHtml = `
+      <!DOCTYPE html>
+      <html dir="rtl" lang="ar">
+      <head>
+        <meta charset="UTF-8">
+        <title>فاتورة الطلب #${order.id.slice(0, 8).toUpperCase()}</title>
+        <style>
+          * { margin: 0; padding: 0; box-sizing: border-box; }
+          body { font-family: 'Segoe UI', Tahoma, sans-serif; padding: 20px; max-width: 400px; margin: 0 auto; }
+          .header { text-align: center; border-bottom: 2px dashed #333; padding-bottom: 15px; margin-bottom: 15px; }
+          .header h1 { font-size: 24px; margin-bottom: 5px; }
+          .header p { font-size: 12px; color: #666; }
+          .order-info { margin-bottom: 15px; font-size: 13px; }
+          .order-info p { margin: 5px 0; }
+          .store-info { background: #f5f5f5; padding: 10px; border-radius: 5px; margin-bottom: 15px; }
+          .store-info h3 { font-size: 14px; margin-bottom: 5px; }
+          .store-info p { font-size: 12px; color: #666; }
+          .items { border-top: 1px solid #ddd; border-bottom: 1px solid #ddd; padding: 10px 0; margin: 15px 0; }
+          .item { display: flex; justify-content: space-between; margin: 8px 0; font-size: 13px; }
+          .totals { margin-top: 15px; }
+          .totals .row { display: flex; justify-content: space-between; margin: 5px 0; font-size: 13px; }
+          .totals .total { font-weight: bold; font-size: 16px; border-top: 2px solid #333; padding-top: 10px; margin-top: 10px; }
+          .address { background: #f9f9f9; padding: 10px; border-radius: 5px; margin: 15px 0; font-size: 12px; }
+          .footer { text-align: center; margin-top: 20px; font-size: 12px; color: #666; border-top: 2px dashed #333; padding-top: 15px; }
+          @media print { body { padding: 10px; } }
+        </style>
+      </head>
+      <body>
+        <div class="header">
+          <h1>وصلني</h1>
+          <p>فاتورة طلب</p>
+        </div>
+        
+        <div class="order-info">
+          <p><strong>رقم الطلب:</strong> ${order.id.slice(0, 8).toUpperCase()}</p>
+          <p><strong>التاريخ:</strong> ${format(new Date(order.created_at), 'dd/MM/yyyy - HH:mm')}</p>
+        </div>
+
+        <div class="store-info">
+          <h3>${order.stores?.name || 'المتجر'}</h3>
+          ${order.stores?.address ? `<p>${order.stores.address}</p>` : ''}
+          ${order.stores?.phone ? `<p>هاتف: ${order.stores.phone}</p>` : ''}
+        </div>
+
+        <div class="address">
+          <strong>عنوان التوصيل:</strong><br>
+          ${order.delivery_address}
+          ${order.notes ? `<br><br><strong>ملاحظات:</strong> ${order.notes}` : ''}
+        </div>
+
+        <div class="items">
+          <strong>المنتجات:</strong>
+          ${order.order_items?.map((item: any) => `
+            <div class="item">
+              <span>${item.product_name} × ${item.quantity}</span>
+              <span>${(item.unit_price * item.quantity).toFixed(2)} ر.س</span>
+            </div>
+          `).join('')}
+        </div>
+
+        <div class="totals">
+          <div class="row">
+            <span>المجموع الفرعي</span>
+            <span>${subtotal.toFixed(2)} ر.س</span>
+          </div>
+          <div class="row">
+            <span>رسوم التوصيل</span>
+            <span>${Number(order.delivery_fee).toFixed(2)} ر.س</span>
+          </div>
+          <div class="row total">
+            <span>المجموع الكلي</span>
+            <span>${Number(order.total_amount).toFixed(2)} ر.س</span>
+          </div>
+        </div>
+
+        <div class="footer">
+          <p>شكراً لاستخدامك وصلني</p>
+          <p>نتمنى لك تجربة سعيدة!</p>
+        </div>
+
+        <script>
+          window.onload = function() { window.print(); }
+        </script>
+      </body>
+      </html>
+    `;
+
+    printWindow.document.write(invoiceHtml);
+    printWindow.document.close();
+  };
+
   return (
     <div className="min-h-screen bg-background">
       <CustomerHeader />
@@ -192,6 +293,10 @@ export default function OrderTracking() {
                 </p>
               </div>
               <div className="flex items-center gap-2">
+                <Button variant="outline" size="sm" onClick={printInvoice}>
+                  <Printer className="h-4 w-4 ml-1" />
+                  طباعة الفاتورة
+                </Button>
                 {order.status === 'cancelled' ? (
                   <Badge variant="destructive" className="text-base px-4 py-1">
                     <XCircle className="h-4 w-4 ml-1" />
