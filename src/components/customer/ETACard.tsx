@@ -1,7 +1,10 @@
 import { useEffect, useState } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
-import { Clock, Navigation, Loader2 } from 'lucide-react';
+import { Clock, Navigation, Loader2, Bell, Volume2 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
+import { useDriverProximityNotification } from '@/hooks/useDriverProximityNotification';
+import { Button } from '@/components/ui/button';
+import { toast } from 'sonner';
 
 interface ETACardProps {
   orderId: string;
@@ -21,9 +24,40 @@ export function ETACard({ orderId, orderStatus, deliveryLat, deliveryLng, driver
   const [eta, setEta] = useState<{ distance: string; duration: string } | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [mapboxToken, setMapboxToken] = useState<string | null>(null);
+  const [notificationsEnabled, setNotificationsEnabled] = useState(false);
 
   // Only show for out_for_delivery status
   const showETA = orderStatus === 'out_for_delivery' && driverId && deliveryLat && deliveryLng;
+
+  // Use proximity notifications hook
+  useDriverProximityNotification(
+    driverLocation?.current_lat,
+    driverLocation?.current_lng,
+    deliveryLat,
+    deliveryLng,
+    showETA && notificationsEnabled
+  );
+
+  const enableNotifications = async () => {
+    try {
+      // Request notification permission
+      if ('Notification' in window) {
+        const permission = await Notification.requestPermission();
+        if (permission === 'granted') {
+          setNotificationsEnabled(true);
+          toast.success('تم تفعيل الإشعارات الصوتية');
+        } else {
+          toast.error('يرجى السماح بالإشعارات لتلقي تنبيهات الاقتراب');
+        }
+      } else {
+        setNotificationsEnabled(true);
+        toast.success('تم تفعيل الإشعارات الصوتية');
+      }
+    } catch (error) {
+      console.error('Error enabling notifications:', error);
+      setNotificationsEnabled(true);
+    }
+  };
 
   // Fetch Mapbox token
   useEffect(() => {
@@ -162,12 +196,30 @@ export function ETACard({ orderId, orderStatus, deliveryLat, deliveryLng, driver
               ) : null}
             </div>
           </div>
-          {eta && !isLoading && (
-            <div className="flex items-center gap-2 bg-primary text-primary-foreground px-4 py-2 rounded-full">
-              <Clock className="h-4 w-4" />
-              <span className="font-bold">{eta.duration}</span>
-            </div>
-          )}
+          <div className="flex items-center gap-2">
+            {!notificationsEnabled ? (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={enableNotifications}
+                className="flex items-center gap-1"
+              >
+                <Bell className="h-4 w-4" />
+                <span className="hidden sm:inline">تفعيل التنبيهات</span>
+              </Button>
+            ) : (
+              <div className="flex items-center gap-1 text-green-600 text-sm">
+                <Volume2 className="h-4 w-4" />
+                <span className="hidden sm:inline">التنبيهات مفعّلة</span>
+              </div>
+            )}
+            {eta && !isLoading && (
+              <div className="flex items-center gap-2 bg-primary text-primary-foreground px-4 py-2 rounded-full">
+                <Clock className="h-4 w-4" />
+                <span className="font-bold">{eta.duration}</span>
+              </div>
+            )}
+          </div>
         </div>
       </CardContent>
     </Card>
