@@ -1,14 +1,26 @@
 import { useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { ArrowRight, Package, Clock, CheckCircle, Truck, XCircle, ChefHat, MapPin, Phone } from 'lucide-react';
+import { ArrowRight, Package, Clock, CheckCircle, Truck, XCircle, ChefHat, MapPin, Phone, Loader2 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { CustomerHeader } from '@/components/customer/CustomerHeader';
 import { useAuth } from '@/hooks/useAuth';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Separator } from '@/components/ui/separator';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog';
 import { format } from 'date-fns';
 import { ar } from 'date-fns/locale';
 import { toast } from 'sonner';
@@ -21,10 +33,14 @@ const statusSteps = [
   { key: 'delivered', label: 'تم التوصيل', icon: CheckCircle, description: 'تم توصيل طلبك بنجاح' },
 ];
 
+// Statuses that allow cancellation
+const cancellableStatuses = ['pending', 'confirmed'];
+
 export default function OrderTracking() {
   const { id } = useParams<{ id: string }>();
   const { user } = useAuth();
   const queryClient = useQueryClient();
+  const [isCancelling, setIsCancelling] = useState(false);
 
   const { data: order, isLoading } = useQuery({
     queryKey: ['order-tracking', id],
@@ -83,12 +99,37 @@ export default function OrderTracking() {
     };
   }, [id, queryClient]);
 
+  const handleCancelOrder = async () => {
+    if (!id) return;
+    
+    setIsCancelling(true);
+    try {
+      const { error } = await supabase
+        .from('orders')
+        .update({ status: 'cancelled' })
+        .eq('id', id)
+        .eq('customer_id', user?.id);
+
+      if (error) throw error;
+
+      toast.success('تم إلغاء الطلب بنجاح');
+      queryClient.invalidateQueries({ queryKey: ['order-tracking', id] });
+      queryClient.invalidateQueries({ queryKey: ['my-orders'] });
+    } catch (error) {
+      console.error('Error cancelling order:', error);
+      toast.error('فشل في إلغاء الطلب');
+    } finally {
+      setIsCancelling(false);
+    }
+  };
+
   const getCurrentStepIndex = () => {
     if (!order) return -1;
     if (order.status === 'cancelled') return -1;
     return statusSteps.findIndex(s => s.key === order.status);
   };
 
+  const canCancel = order && cancellableStatuses.includes(order.status);
   const currentStep = getCurrentStepIndex();
 
   return (
@@ -117,19 +158,51 @@ export default function OrderTracking() {
           </div>
         ) : (
           <div className="space-y-6">
-            <div className="flex items-center justify-between">
+            <div className="flex items-center justify-between flex-wrap gap-4">
               <div>
                 <h1 className="text-2xl font-bold">تتبع الطلب</h1>
                 <p className="text-muted-foreground">
                   رقم الطلب: {order.id.slice(0, 8).toUpperCase()}
                 </p>
               </div>
-              {order.status === 'cancelled' && (
-                <Badge variant="destructive" className="text-base px-4 py-1">
-                  <XCircle className="h-4 w-4 ml-1" />
-                  ملغي
-                </Badge>
-              )}
+              <div className="flex items-center gap-2">
+                {order.status === 'cancelled' ? (
+                  <Badge variant="destructive" className="text-base px-4 py-1">
+                    <XCircle className="h-4 w-4 ml-1" />
+                    ملغي
+                  </Badge>
+                ) : canCancel ? (
+                  <AlertDialog>
+                    <AlertDialogTrigger asChild>
+                      <Button variant="destructive" size="sm" disabled={isCancelling}>
+                        {isCancelling ? (
+                          <Loader2 className="h-4 w-4 ml-1 animate-spin" />
+                        ) : (
+                          <XCircle className="h-4 w-4 ml-1" />
+                        )}
+                        إلغاء الطلب
+                      </Button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent dir="rtl">
+                      <AlertDialogHeader>
+                        <AlertDialogTitle>هل أنت متأكد من إلغاء الطلب؟</AlertDialogTitle>
+                        <AlertDialogDescription>
+                          سيتم إلغاء طلبك نهائياً ولا يمكن التراجع عن هذا الإجراء.
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter className="gap-2">
+                        <AlertDialogCancel>تراجع</AlertDialogCancel>
+                        <AlertDialogAction
+                          onClick={handleCancelOrder}
+                          className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                        >
+                          نعم، إلغاء الطلب
+                        </AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
+                ) : null}
+              </div>
             </div>
 
             {/* Status Timeline */}
