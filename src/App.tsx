@@ -25,6 +25,10 @@ import Checkout from "./pages/customer/Checkout";
 import OrderSuccess from "./pages/customer/OrderSuccess";
 import MyOrders from "./pages/customer/MyOrders";
 import OrderTracking from "./pages/customer/OrderTracking";
+// Driver pages
+import DriverDashboard from "./pages/driver/DriverDashboard";
+import DriverEarnings from "./pages/driver/DriverEarnings";
+import DriverHistory from "./pages/driver/DriverHistory";
 
 const queryClient = new QueryClient();
 
@@ -46,6 +50,11 @@ const App = () => (
               <Route path="/my-orders" element={<MyOrders />} />
               <Route path="/order/:id" element={<OrderTracking />} />
               <Route path="/auth" element={<Auth />} />
+              
+              {/* Driver Routes */}
+              <Route path="/driver" element={<DriverDashboard />} />
+              <Route path="/driver/earnings" element={<DriverEarnings />} />
+              <Route path="/driver/history" element={<DriverHistory />} />
               
               {/* Admin Routes */}
               <Route path="/admin" element={<AdminLayout />}>
