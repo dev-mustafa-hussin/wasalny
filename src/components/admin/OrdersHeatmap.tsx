@@ -4,7 +4,7 @@ import 'mapbox-gl/dist/mapbox-gl.css';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Flame, MapPin, RefreshCw, TrendingUp } from 'lucide-react';
+import { Flame, MapPin, RefreshCw, TrendingUp, Filter, X, Store } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
@@ -20,6 +20,21 @@ interface HotZone {
   percentage: number;
 }
 
+interface StoreData {
+  id: string;
+  name: string;
+}
+
+const statusOptions = [
+  { value: 'all', label: 'جميع الحالات' },
+  { value: 'pending', label: 'معلق' },
+  { value: 'confirmed', label: 'مؤكد' },
+  { value: 'preparing', label: 'قيد التحضير' },
+  { value: 'out_for_delivery', label: 'في الطريق' },
+  { value: 'delivered', label: 'تم التوصيل' },
+  { value: 'cancelled', label: 'ملغي' },
+];
+
 export default function OrdersHeatmap() {
   const mapContainer = useRef<HTMLDivElement>(null);
   const map = useRef<mapboxgl.Map | null>(null);
@@ -31,24 +46,33 @@ export default function OrdersHeatmap() {
   const [totalOrders, setTotalOrders] = useState(0);
   const [period, setPeriod] = useState('30');
   const [hotZones, setHotZones] = useState<HotZone[]>([]);
+  const [stores, setStores] = useState<StoreData[]>([]);
+  const [selectedStore, setSelectedStore] = useState('all');
+  const [selectedStatus, setSelectedStatus] = useState('all');
 
-  // Fetch Mapbox token
+  // Fetch Mapbox token and stores
   useEffect(() => {
-    const fetchToken = async () => {
+    const fetchInitialData = async () => {
       try {
-        const { data, error } = await supabase.functions.invoke('get-mapbox-token');
-        if (error) throw error;
-        if (data?.token) {
-          setMapToken(data.token);
+        const [tokenRes, storesRes] = await Promise.all([
+          supabase.functions.invoke('get-mapbox-token'),
+          supabase.from('stores').select('id, name')
+        ]);
+        
+        if (tokenRes.error) throw tokenRes.error;
+        if (tokenRes.data?.token) {
+          setMapToken(tokenRes.data.token);
         } else {
           setError('لم يتم تكوين مفتاح Mapbox');
         }
+        
+        setStores(storesRes.data || []);
       } catch (err: any) {
-        console.error('Error fetching Mapbox token:', err);
-        setError('فشل في جلب مفتاح الخريطة');
+        console.error('Error fetching initial data:', err);
+        setError('فشل في جلب البيانات');
       }
     };
-    fetchToken();
+    fetchInitialData();
   }, []);
 
   // Fetch orders with locations
@@ -58,12 +82,22 @@ export default function OrdersHeatmap() {
     const fromDate = new Date();
     fromDate.setDate(fromDate.getDate() - parseInt(period));
     
-    const { data: orders, error } = await supabase
+    let query = supabase
       .from('orders')
-      .select('delivery_lat, delivery_lng, delivery_address')
+      .select('delivery_lat, delivery_lng, delivery_address, store_id, status')
       .not('delivery_lat', 'is', null)
       .not('delivery_lng', 'is', null)
       .gte('created_at', fromDate.toISOString());
+
+    if (selectedStore !== 'all') {
+      query = query.eq('store_id', selectedStore);
+    }
+
+    if (selectedStatus !== 'all') {
+      query = query.eq('status', selectedStatus);
+    }
+
+    const { data: orders, error } = await query;
 
     if (error) {
       console.error('Error fetching orders:', error);
@@ -121,7 +155,14 @@ export default function OrdersHeatmap() {
     if (mapToken) {
       fetchOrderLocations();
     }
-  }, [mapToken, period]);
+  }, [mapToken, period, selectedStore, selectedStatus]);
+
+  const hasActiveFilters = selectedStore !== 'all' || selectedStatus !== 'all';
+
+  const clearFilters = () => {
+    setSelectedStore('all');
+    setSelectedStatus('all');
+  };
 
   // Initialize map
   useEffect(() => {
@@ -333,6 +374,64 @@ export default function OrdersHeatmap() {
           </Button>
         </div>
       </div>
+
+      {/* Filters */}
+      <Card>
+        <CardContent className="py-4">
+          <div className="flex flex-wrap items-center gap-4">
+            <div className="flex items-center gap-2">
+              <Filter className="h-4 w-4 text-muted-foreground" />
+              <span className="text-sm font-medium">فلترة:</span>
+            </div>
+
+            <Select value={selectedStore} onValueChange={setSelectedStore}>
+              <SelectTrigger className="w-44">
+                <Store className="h-4 w-4 ml-2" />
+                <SelectValue placeholder="جميع المتاجر" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">جميع المتاجر</SelectItem>
+                {stores.map(store => (
+                  <SelectItem key={store.id} value={store.id}>{store.name}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+
+            <Select value={selectedStatus} onValueChange={setSelectedStatus}>
+              <SelectTrigger className="w-40">
+                <SelectValue placeholder="جميع الحالات" />
+              </SelectTrigger>
+              <SelectContent>
+                {statusOptions.map(status => (
+                  <SelectItem key={status.value} value={status.value}>{status.label}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+
+            {hasActiveFilters && (
+              <Button variant="ghost" size="sm" onClick={clearFilters} className="text-muted-foreground">
+                <X className="h-4 w-4 ml-1" />
+                مسح الفلاتر
+              </Button>
+            )}
+          </div>
+
+          {hasActiveFilters && (
+            <div className="flex flex-wrap gap-2 mt-3">
+              {selectedStore !== 'all' && (
+                <Badge variant="secondary">
+                  المتجر: {stores.find(s => s.id === selectedStore)?.name}
+                </Badge>
+              )}
+              {selectedStatus !== 'all' && (
+                <Badge variant="secondary">
+                  الحالة: {statusOptions.find(s => s.value === selectedStatus)?.label}
+                </Badge>
+              )}
+            </div>
+          )}
+        </CardContent>
+      </Card>
 
       <div className="grid gap-4 lg:grid-cols-4">
         <Card className="lg:col-span-3">
