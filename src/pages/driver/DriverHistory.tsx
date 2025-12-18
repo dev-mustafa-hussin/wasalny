@@ -13,7 +13,8 @@ import {
   ArrowRight,
   CheckCircle,
   XCircle,
-  Star
+  Star,
+  Settings
 } from 'lucide-react';
 
 interface Order {
@@ -251,6 +252,20 @@ export default function DriverHistory() {
             <button className="flex flex-col items-center gap-1 text-primary">
               <Clock className="w-5 h-5" />
               <span className="text-xs">السجل</span>
+            </button>
+            <button 
+              className="flex flex-col items-center gap-1 text-muted-foreground"
+              onClick={() => navigate('/driver/ratings')}
+            >
+              <Star className="w-5 h-5" />
+              <span className="text-xs">التقييمات</span>
+            </button>
+            <button 
+              className="flex flex-col items-center gap-1 text-muted-foreground"
+              onClick={() => navigate('/driver/settings')}
+            >
+              <Settings className="w-5 h-5" />
+              <span className="text-xs">الإعدادات</span>
             </button>
           </div>
         </div>

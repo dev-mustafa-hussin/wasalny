@@ -21,7 +21,8 @@ import {
   Map,
   ChevronDown,
   ChevronUp,
-  Settings
+  Settings,
+  Star
 } from 'lucide-react';
 import { useDriverGPS } from '@/hooks/useDriverGPS';
 import { DriverNavigationMap } from '@/components/driver/DriverNavigationMap';
@@ -631,6 +632,13 @@ export default function DriverDashboard() {
             >
               <Clock className="w-5 h-5" />
               <span className="text-xs">السجل</span>
+            </button>
+            <button 
+              className="flex flex-col items-center gap-1 text-muted-foreground"
+              onClick={() => navigate('/driver/ratings')}
+            >
+              <Star className="w-5 h-5" />
+              <span className="text-xs">التقييمات</span>
             </button>
             <button 
               className="flex flex-col items-center gap-1 text-muted-foreground"
