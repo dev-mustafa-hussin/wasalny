@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { ArrowRight, Package, Clock, CheckCircle, Truck, XCircle, ChefHat, MapPin, Phone, Loader2 } from 'lucide-react';
+import { ArrowRight, Package, Clock, CheckCircle, Truck, XCircle, ChefHat, MapPin, Phone, Loader2, Star } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { CustomerHeader } from '@/components/customer/CustomerHeader';
 import { useAuth } from '@/hooks/useAuth';
@@ -10,6 +10,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Separator } from '@/components/ui/separator';
+import { StarRating } from '@/components/ui/star-rating';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -41,6 +42,8 @@ export default function OrderTracking() {
   const { user } = useAuth();
   const queryClient = useQueryClient();
   const [isCancelling, setIsCancelling] = useState(false);
+  const [rating, setRating] = useState(0);
+  const [isSubmittingRating, setIsSubmittingRating] = useState(false);
 
   const { data: order, isLoading } = useQuery({
     queryKey: ['order-tracking', id],
@@ -120,6 +123,29 @@ export default function OrderTracking() {
       toast.error('فشل في إلغاء الطلب');
     } finally {
       setIsCancelling(false);
+    }
+  };
+
+  const handleSubmitRating = async () => {
+    if (!id || rating === 0) return;
+    
+    setIsSubmittingRating(true);
+    try {
+      const { error } = await supabase
+        .from('orders')
+        .update({ rating })
+        .eq('id', id)
+        .eq('customer_id', user?.id);
+
+      if (error) throw error;
+
+      toast.success('شكراً لتقييمك!');
+      queryClient.invalidateQueries({ queryKey: ['order-tracking', id] });
+    } catch (error) {
+      console.error('Error submitting rating:', error);
+      toast.error('فشل في إرسال التقييم');
+    } finally {
+      setIsSubmittingRating(false);
     }
   };
 
@@ -250,6 +276,47 @@ export default function OrderTracking() {
                       );
                     })}
                   </div>
+                </CardContent>
+              </Card>
+            )}
+
+            {/* Rating Card - Show only for delivered orders */}
+            {order.status === 'delivered' && (
+              <Card className="border-primary/50 bg-primary/5">
+                <CardHeader>
+                  <CardTitle className="text-lg flex items-center gap-2">
+                    <Star className="h-5 w-5 text-yellow-400" />
+                    {order.rating ? 'تقييمك للطلب' : 'قيّم تجربتك'}
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  {order.rating ? (
+                    <div className="text-center">
+                      <StarRating value={order.rating} readonly size="lg" />
+                      <p className="text-muted-foreground mt-2">شكراً لتقييمك!</p>
+                    </div>
+                  ) : (
+                    <div className="space-y-4">
+                      <p className="text-muted-foreground">كيف كانت تجربتك مع هذا الطلب؟</p>
+                      <div className="flex justify-center">
+                        <StarRating value={rating} onChange={setRating} size="lg" />
+                      </div>
+                      <Button
+                        className="w-full"
+                        onClick={handleSubmitRating}
+                        disabled={rating === 0 || isSubmittingRating}
+                      >
+                        {isSubmittingRating ? (
+                          <>
+                            <Loader2 className="h-4 w-4 ml-2 animate-spin" />
+                            جاري الإرسال...
+                          </>
+                        ) : (
+                          'إرسال التقييم'
+                        )}
+                      </Button>
+                    </div>
+                  )}
                 </CardContent>
               </Card>
             )}
