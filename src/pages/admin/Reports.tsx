@@ -11,9 +11,12 @@ import {
   TrendingDown, 
   DollarSign, 
   ShoppingCart,
-  Calendar
+  Calendar,
+  Filter,
+  X
 } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Badge } from '@/components/ui/badge';
 
 interface OrderData {
   id: string;
@@ -46,23 +49,35 @@ export default function Reports() {
   const [stores, setStores] = useState<StoreData[]>([]);
   const [loading, setLoading] = useState(true);
   const [period, setPeriod] = useState('30');
+  const [selectedStore, setSelectedStore] = useState<string>('all');
+  const [selectedStatus, setSelectedStatus] = useState<string>('all');
   const [dailyStats, setDailyStats] = useState<DailyStats[]>([]);
   const [storeStats, setStoreStats] = useState<StoreStats[]>([]);
 
   useEffect(() => {
     fetchData();
-  }, [period]);
+  }, [period, selectedStore, selectedStatus]);
 
   const fetchData = async () => {
     setLoading(true);
     const daysAgo = new Date();
     daysAgo.setDate(daysAgo.getDate() - parseInt(period));
 
+    let ordersQuery = supabase
+      .from('orders')
+      .select('id, total_amount, delivery_fee, status, created_at, store_id')
+      .gte('created_at', daysAgo.toISOString());
+
+    if (selectedStore !== 'all') {
+      ordersQuery = ordersQuery.eq('store_id', selectedStore);
+    }
+
+    if (selectedStatus !== 'all') {
+      ordersQuery = ordersQuery.eq('status', selectedStatus);
+    }
+
     const [ordersRes, storesRes] = await Promise.all([
-      supabase
-        .from('orders')
-        .select('id, total_amount, delivery_fee, status, created_at, store_id')
-        .gte('created_at', daysAgo.toISOString()),
+      ordersQuery,
       supabase.from('stores').select('id, name'),
     ]);
 
@@ -136,6 +151,22 @@ export default function Reports() {
     { status: 'other', label: 'أخرى', count: orders.filter(o => !['delivered', 'cancelled', 'pending'].includes(o.status)).length, color: 'hsl(var(--muted))' },
   ].filter(s => s.count > 0);
 
+  const statusOptions = [
+    { value: 'pending', label: 'معلق' },
+    { value: 'confirmed', label: 'مؤكد' },
+    { value: 'preparing', label: 'قيد التحضير' },
+    { value: 'out_for_delivery', label: 'في الطريق' },
+    { value: 'delivered', label: 'تم التوصيل' },
+    { value: 'cancelled', label: 'ملغي' },
+  ];
+
+  const clearFilters = () => {
+    setSelectedStore('all');
+    setSelectedStatus('all');
+  };
+
+  const hasActiveFilters = selectedStore !== 'all' || selectedStatus !== 'all';
+
   const exportToCSV = () => {
     const headers = ['التاريخ', 'رقم الطلب', 'المبلغ', 'رسوم التوصيل', 'الحالة'];
     const rows = orders.map(o => [
@@ -161,7 +192,7 @@ export default function Reports() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-wrap items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold flex items-center gap-2">
             <FileText className="h-6 w-6" />
@@ -169,9 +200,9 @@ export default function Reports() {
           </h1>
           <p className="text-muted-foreground">تقارير تفصيلية للطلبات والإيرادات</p>
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex flex-wrap items-center gap-3">
           <Select value={period} onValueChange={setPeriod}>
-            <SelectTrigger className="w-40">
+            <SelectTrigger className="w-36">
               <Calendar className="h-4 w-4 ml-2" />
               <SelectValue />
             </SelectTrigger>
@@ -187,6 +218,64 @@ export default function Reports() {
           </Button>
         </div>
       </div>
+
+      {/* Filters */}
+      <Card>
+        <CardContent className="pt-4">
+          <div className="flex flex-wrap items-center gap-4">
+            <div className="flex items-center gap-2">
+              <Filter className="h-4 w-4 text-muted-foreground" />
+              <span className="text-sm font-medium">فلترة:</span>
+            </div>
+            
+            <Select value={selectedStore} onValueChange={setSelectedStore}>
+              <SelectTrigger className="w-44">
+                <SelectValue placeholder="جميع المتاجر" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">جميع المتاجر</SelectItem>
+                {stores.map(store => (
+                  <SelectItem key={store.id} value={store.id}>{store.name}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+
+            <Select value={selectedStatus} onValueChange={setSelectedStatus}>
+              <SelectTrigger className="w-40">
+                <SelectValue placeholder="جميع الحالات" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">جميع الحالات</SelectItem>
+                {statusOptions.map(status => (
+                  <SelectItem key={status.value} value={status.value}>{status.label}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+
+            {hasActiveFilters && (
+              <Button variant="ghost" size="sm" onClick={clearFilters} className="text-muted-foreground">
+                <X className="h-4 w-4 ml-1" />
+                مسح الفلاتر
+              </Button>
+            )}
+          </div>
+
+          {hasActiveFilters && (
+            <div className="flex flex-wrap gap-2 mt-3">
+              {selectedStore !== 'all' && (
+                <Badge variant="secondary">
+                  المتجر: {stores.find(s => s.id === selectedStore)?.name}
+                </Badge>
+              )}
+              {selectedStatus !== 'all' && (
+                <Badge variant="secondary">
+                  الحالة: {statusOptions.find(s => s.value === selectedStatus)?.label}
+                </Badge>
+              )}
+            </div>
+          )}
+        </CardContent>
+      </Card>
 
       {/* Summary Cards */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
