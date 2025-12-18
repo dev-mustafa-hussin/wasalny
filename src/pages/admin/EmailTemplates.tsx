@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
-import { Mail, Palette, Save, Loader2, Type, MessageSquare, Eye } from 'lucide-react';
+import { Mail, Palette, Save, Loader2, Type, MessageSquare, Eye, Send } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Separator } from '@/components/ui/separator';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -44,6 +44,8 @@ export default function EmailTemplates() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [previewStatus, setPreviewStatus] = useState('delivered');
+  const [testEmail, setTestEmail] = useState('');
+  const [sendingTest, setSendingTest] = useState(false);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -407,6 +409,87 @@ export default function EmailTemplates() {
               <p className="text-xs text-muted-foreground text-center">
                 هذه معاينة تقريبية. قد يختلف الشكل النهائي قليلاً حسب برنامج البريد الإلكتروني المستخدم.
               </p>
+
+              <Separator />
+
+              {/* Test Email Section */}
+              <div className="bg-muted/30 p-4 rounded-lg space-y-4">
+                <div>
+                  <Label className="text-base font-medium">إرسال إيميل تجريبي</Label>
+                  <p className="text-sm text-muted-foreground">أرسل نسخة تجريبية للتحقق من الإعدادات</p>
+                </div>
+                <div className="flex gap-2">
+                  <Input
+                    type="email"
+                    placeholder="أدخل بريدك الإلكتروني"
+                    value={testEmail}
+                    onChange={(e) => setTestEmail(e.target.value)}
+                    className="flex-1"
+                    dir="ltr"
+                  />
+                  <Button 
+                    onClick={async () => {
+                      if (!testEmail || !template) {
+                        toast({ title: 'خطأ', description: 'يرجى إدخال بريد إلكتروني صحيح', variant: 'destructive' });
+                        return;
+                      }
+                      
+                      setSendingTest(true);
+                      try {
+                        const { data, error } = await supabase.functions.invoke('send-order-notification', {
+                          body: {
+                            is_test: true,
+                            test_email: testEmail,
+                            status: previewStatus,
+                            template: {
+                              header_text: template.header_text,
+                              primary_color: template.primary_color,
+                              secondary_color: template.secondary_color,
+                              footer_text: template.footer_text,
+                              footer_text_en: template.footer_text_en,
+                              subject_template: template.subject_template,
+                              custom_message_pending: template.custom_message_pending,
+                              custom_message_confirmed: template.custom_message_confirmed,
+                              custom_message_preparing: template.custom_message_preparing,
+                              custom_message_ready: template.custom_message_ready,
+                              custom_message_out_for_delivery: template.custom_message_out_for_delivery,
+                              custom_message_delivered: template.custom_message_delivered,
+                              custom_message_cancelled: template.custom_message_cancelled,
+                            },
+                          },
+                        });
+
+                        if (error) throw error;
+
+                        toast({ 
+                          title: 'تم الإرسال', 
+                          description: `تم إرسال الإيميل التجريبي إلى ${testEmail}` 
+                        });
+                      } catch (error: any) {
+                        console.error('Error sending test email:', error);
+                        toast({ 
+                          title: 'خطأ', 
+                          description: error.message || 'فشل في إرسال الإيميل التجريبي', 
+                          variant: 'destructive' 
+                        });
+                      } finally {
+                        setSendingTest(false);
+                      }
+                    }}
+                    disabled={sendingTest || !testEmail}
+                  >
+                    {sendingTest ? (
+                      <Loader2 className="h-4 w-4 ml-2 animate-spin" />
+                    ) : (
+                      <Send className="h-4 w-4 ml-2" />
+                    )}
+                    إرسال تجريبي
+                  </Button>
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  سيتم إرسال إيميل بالإعدادات الحالية (غير المحفوظة) لحالة "{statusMessages.find(s => s.key === previewStatus)?.label}"
+                </p>
+              </div>
             </CardContent>
           </Card>
         </TabsContent>
