@@ -4,7 +4,14 @@ import { supabase } from '@/integrations/supabase/client';
 import { Store, Package, ShoppingCart, Users, TrendingUp, Clock, Star } from 'lucide-react';
 import { Progress } from '@/components/ui/progress';
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart';
-import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer } from 'recharts';
+import { BarChart, Bar, XAxis, YAxis, PieChart, Pie, Cell } from 'recharts';
+
+interface OrderStatus {
+  status: string;
+  label: string;
+  count: number;
+  color: string;
+}
 
 interface DailyRevenue {
   date: string;
@@ -22,6 +29,7 @@ interface Stats {
   ratedOrders: number;
   ratingBreakdown: { rating: number; count: number }[];
   dailyRevenue: DailyRevenue[];
+  ordersByStatus: OrderStatus[];
 }
 
 export default function Dashboard() {
@@ -36,6 +44,7 @@ export default function Dashboard() {
     ratedOrders: 0,
     ratingBreakdown: [],
     dailyRevenue: [],
+    ordersByStatus: [],
   });
   const [loading, setLoading] = useState(true);
 
@@ -52,7 +61,7 @@ export default function Dashboard() {
     sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 6);
     sevenDaysAgo.setHours(0, 0, 0, 0);
 
-    const [stores, products, orders, drivers, pending, todayData, ratedOrdersData, revenueData] = await Promise.all([
+    const [stores, products, orders, drivers, pending, todayData, ratedOrdersData, revenueData, allOrdersStatus] = await Promise.all([
       supabase.from('stores').select('id', { count: 'exact', head: true }),
       supabase.from('products').select('id', { count: 'exact', head: true }),
       supabase.from('orders').select('id', { count: 'exact', head: true }),
@@ -61,6 +70,7 @@ export default function Dashboard() {
       supabase.from('orders').select('id', { count: 'exact', head: true }).gte('created_at', today.toISOString()),
       supabase.from('orders').select('rating').not('rating', 'is', null),
       supabase.from('orders').select('total_amount, created_at').gte('created_at', sevenDaysAgo.toISOString()),
+      supabase.from('orders').select('status'),
     ]);
 
     // Calculate rating statistics
@@ -102,6 +112,22 @@ export default function Dashboard() {
       revenue,
     }));
 
+    // Calculate orders by status
+    const statusConfig = [
+      { status: 'pending', label: 'معلق', color: 'hsl(var(--warning))' },
+      { status: 'confirmed', label: 'مؤكد', color: 'hsl(var(--info))' },
+      { status: 'preparing', label: 'قيد التحضير', color: 'hsl(var(--accent))' },
+      { status: 'out_for_delivery', label: 'في الطريق', color: 'hsl(var(--primary))' },
+      { status: 'delivered', label: 'تم التوصيل', color: 'hsl(var(--success))' },
+      { status: 'cancelled', label: 'ملغي', color: 'hsl(var(--destructive))' },
+    ];
+
+    const allOrders = allOrdersStatus.data || [];
+    const ordersByStatus = statusConfig.map(config => ({
+      ...config,
+      count: allOrders.filter(o => o.status === config.status).length,
+    })).filter(s => s.count > 0);
+
     setStats({
       totalStores: stores.count || 0,
       totalProducts: products.count || 0,
@@ -113,6 +139,7 @@ export default function Dashboard() {
       ratedOrders: ratedCount,
       ratingBreakdown: breakdown,
       dailyRevenue,
+      ordersByStatus,
     });
     setLoading(false);
   };
@@ -258,6 +285,58 @@ export default function Dashboard() {
           </CardContent>
         </Card>
       </div>
+
+      {/* Orders by Status Chart */}
+      <Card>
+        <CardHeader className="flex flex-row items-center justify-between pb-2">
+          <CardTitle className="text-lg">الطلبات حسب الحالة</CardTitle>
+          <div className="p-2 rounded-lg bg-info">
+            <ShoppingCart className="h-4 w-4 text-white" />
+          </div>
+        </CardHeader>
+        <CardContent>
+          <div className="flex flex-col md:flex-row items-center gap-6">
+            <ChartContainer
+              config={{
+                count: {
+                  label: "عدد الطلبات",
+                },
+              }}
+              className="h-[200px] w-full md:w-1/2"
+            >
+              <PieChart>
+                <Pie
+                  data={stats.ordersByStatus}
+                  dataKey="count"
+                  nameKey="label"
+                  cx="50%"
+                  cy="50%"
+                  outerRadius={80}
+                  innerRadius={40}
+                >
+                  {stats.ordersByStatus.map((entry, index) => (
+                    <Cell key={`cell-${index}`} fill={entry.color} />
+                  ))}
+                </Pie>
+                <ChartTooltip
+                  content={<ChartTooltipContent />}
+                />
+              </PieChart>
+            </ChartContainer>
+            <div className="flex flex-wrap gap-3 justify-center md:justify-start">
+              {stats.ordersByStatus.map((item) => (
+                <div key={item.status} className="flex items-center gap-2">
+                  <div 
+                    className="w-3 h-3 rounded-full" 
+                    style={{ backgroundColor: item.color }}
+                  />
+                  <span className="text-sm">{item.label}: {item.count}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </CardContent>
+      </Card>
 
       <Card>
         <CardHeader>
