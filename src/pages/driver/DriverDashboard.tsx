@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
@@ -25,6 +25,7 @@ import {
 } from 'lucide-react';
 import { useDriverGPS } from '@/hooks/useDriverGPS';
 import { DriverNavigationMap } from '@/components/driver/DriverNavigationMap';
+import { useNewOrderSound } from '@/hooks/useNewOrderSound';
 
 interface Order {
   id: string;
@@ -64,6 +65,8 @@ export default function DriverDashboard() {
   const [todayEarnings, setTodayEarnings] = useState(0);
   const [completedToday, setCompletedToday] = useState(0);
   const [expandedOrderId, setExpandedOrderId] = useState<string | null>(null);
+  const previousAvailableCountRef = useRef(0);
+  const { playSound } = useNewOrderSound();
 
   const { location, isTracking, startTracking, stopTracking, error: gpsError } = useDriverGPS({
     driverId: driverInfo?.id || '',
@@ -91,8 +94,21 @@ export default function DriverDashboard() {
           schema: 'public',
           table: 'orders'
         },
-        () => {
+        (payload) => {
           fetchOrders();
+          
+          // Play sound for new available orders
+          if (payload.eventType === 'UPDATE' || payload.eventType === 'INSERT') {
+            const order = payload.new as any;
+            // If order becomes ready and has no driver, it's a new available order
+            if (order.status === 'ready' && !order.driver_id && driverInfo?.is_available) {
+              playSound();
+              toast.info('🔔 طلب جديد متاح!', {
+                description: 'يوجد طلب جديد جاهز للاستلام',
+                duration: 5000
+              });
+            }
+          }
         }
       )
       .subscribe();
@@ -100,7 +116,7 @@ export default function DriverDashboard() {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [driverInfo?.id]);
+  }, [driverInfo?.id, driverInfo?.is_available, playSound]);
 
   async function fetchDriverData() {
     if (!user) return;

@@ -9,6 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { ArrowRight, User, Car, Save, Loader2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
+import { DriverAvatarUpload } from '@/components/driver/DriverAvatarUpload';
 
 interface DriverProfile {
   full_name: string;
@@ -155,6 +156,16 @@ const DriverSettings = () => {
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
+            {/* Avatar Upload */}
+            {user && (
+              <DriverAvatarUpload
+                avatarUrl={profile.avatar_url}
+                fullName={profile.full_name}
+                userId={user.id}
+                onAvatarChange={(url) => setProfile(prev => ({ ...prev, avatar_url: url }))}
+              />
+            )}
+            
             <div className="space-y-2">
               <Label htmlFor="full_name">الاسم الكامل</Label>
               <Input
