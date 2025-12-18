@@ -24,6 +24,7 @@ import {
   Truck,
   FileText,
   Mail,
+  MapPin,
 } from 'lucide-react';
 
 const menuItems = [
@@ -32,6 +33,7 @@ const menuItems = [
   { title: 'المنتجات', url: '/admin/products', icon: Package },
   { title: 'الطلبات', url: '/admin/orders', icon: ShoppingCart },
   { title: 'المندوبين', url: '/admin/drivers', icon: Users },
+  { title: 'تتبع المندوبين', url: '/admin/drivers-tracking', icon: MapPin },
   { title: 'التقارير', url: '/admin/reports', icon: FileText },
   { title: 'قوالب البريد', url: '/admin/email-templates', icon: Mail },
   { title: 'الإعدادات', url: '/admin/settings', icon: Settings },
