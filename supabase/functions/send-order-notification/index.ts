@@ -33,13 +33,6 @@ const defaultMessages: Record<string, string> = {
   accepted: "تم قبول طلبك وسيبدأ التحضير قريباً.",
 };
 
-interface OrderNotificationRequest {
-  order_id: string;
-  new_status: string;
-  customer_id: string;
-  store_name: string;
-}
-
 interface EmailTemplate {
   header_text: string;
   primary_color: string;
@@ -56,6 +49,57 @@ interface EmailTemplate {
   custom_message_cancelled: string | null;
 }
 
+function buildEmailHtml(template: EmailTemplate, customerName: string, statusInfo: { ar: string }, shortOrderId: string, storeName: string, statusMessage: string) {
+  return `
+    <!DOCTYPE html>
+    <html dir="rtl" lang="ar">
+    <head>
+      <meta charset="UTF-8">
+      <style>
+        body { font-family: 'Segoe UI', Tahoma, sans-serif; background: #f5f5f5; margin: 0; padding: 20px; }
+        .container { max-width: 500px; margin: 0 auto; background: white; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
+        .header { background: linear-gradient(135deg, ${template.primary_color}, ${template.secondary_color}); color: white; padding: 25px; text-align: center; }
+        .header h1 { margin: 0; font-size: 24px; }
+        .content { padding: 25px; }
+        .status-badge { display: inline-block; padding: 10px 20px; border-radius: 50px; font-weight: bold; font-size: 16px; margin: 15px 0; background: ${template.primary_color}22; color: ${template.primary_color}; }
+        .order-info { background: #f9fafb; padding: 15px; border-radius: 8px; margin: 15px 0; }
+        .order-info p { margin: 5px 0; color: #4b5563; }
+        .status-message { text-align: center; padding: 15px; margin: 15px 0; background: #f0f9ff; border-radius: 8px; color: #1e40af; }
+        .footer { text-align: center; padding: 20px; color: #9ca3af; font-size: 12px; border-top: 1px solid #e5e7eb; }
+        .test-badge { background: #fef3c7; color: #92400e; padding: 8px 16px; border-radius: 4px; font-size: 12px; margin-bottom: 15px; display: inline-block; }
+      </style>
+    </head>
+    <body>
+      <div class="container">
+        <div class="header">
+          <h1>${template.header_text}</h1>
+        </div>
+        <div class="content">
+          <p style="font-size: 18px; color: #1f2937;">مرحباً ${customerName}،</p>
+          <p style="color: #4b5563;">تم تحديث حالة طلبك:</p>
+          
+          <div style="text-align: center;">
+            <span class="status-badge">${statusInfo.ar}</span>
+          </div>
+          
+          <div class="order-info">
+            <p><strong>رقم الطلب:</strong> ${shortOrderId}</p>
+            <p><strong>المتجر:</strong> ${storeName}</p>
+            <p><strong>الحالة الجديدة:</strong> ${statusInfo.ar}</p>
+          </div>
+          
+          ${statusMessage ? `<div class="status-message">${statusMessage}</div>` : ''}
+        </div>
+        <div class="footer">
+          <p>${template.footer_text}</p>
+          <p>${template.footer_text_en}</p>
+        </div>
+      </div>
+    </body>
+    </html>
+  `;
+}
+
 const handler = async (req: Request): Promise<Response> => {
   console.log("Received request to send order notification");
 
@@ -64,7 +108,70 @@ const handler = async (req: Request): Promise<Response> => {
   }
 
   try {
-    const { order_id, new_status, customer_id, store_name }: OrderNotificationRequest = await req.json();
+    const body = await req.json();
+    
+    // Check if this is a test email request
+    if (body.is_test) {
+      console.log("Processing test email request");
+      const { test_email, status, template: customTemplate } = body;
+
+      if (!test_email) {
+        return new Response(JSON.stringify({ error: "No test email provided" }), {
+          status: 400,
+          headers: { "Content-Type": "application/json", ...corsHeaders },
+        });
+      }
+
+      const template: EmailTemplate = customTemplate || {
+        header_text: "وصلني - Waslni",
+        primary_color: "#3b82f6",
+        secondary_color: "#1d4ed8",
+        footer_text: "شكراً لاستخدامك وصلني",
+        footer_text_en: "Thank you for using Waslni",
+        subject_template: "تحديث طلبك #{order_id} - {status}",
+        custom_message_pending: null,
+        custom_message_confirmed: null,
+        custom_message_preparing: null,
+        custom_message_ready: null,
+        custom_message_out_for_delivery: null,
+        custom_message_delivered: null,
+        custom_message_cancelled: null,
+      };
+
+      const statusInfo = statusLabels[status] || { ar: status, en: status };
+      const shortOrderId = "TEST1234";
+      const customerName = "مستخدم تجريبي";
+      const storeName = "متجر تجريبي";
+
+      const customMessageKey = `custom_message_${status}` as keyof EmailTemplate;
+      const customMessage = template[customMessageKey] as string | null;
+      const statusMessage = customMessage || defaultMessages[status] || "";
+
+      const emailSubject = `[تجريبي] ${template.subject_template
+        .replace('{order_id}', shortOrderId)
+        .replace('{status}', statusInfo.ar)}`;
+
+      const emailHtml = buildEmailHtml(template, customerName, statusInfo, shortOrderId, storeName, statusMessage);
+
+      console.log(`Sending test email to ${test_email}`);
+
+      const emailResponse = await resend.emails.send({
+        from: "Waslni <onboarding@resend.dev>",
+        to: [test_email],
+        subject: emailSubject,
+        html: emailHtml,
+      });
+
+      console.log("Test email sent successfully:", emailResponse);
+
+      return new Response(JSON.stringify({ success: true, data: emailResponse }), {
+        status: 200,
+        headers: { "Content-Type": "application/json", ...corsHeaders },
+      });
+    }
+
+    // Regular order notification flow
+    const { order_id, new_status, customer_id, store_name } = body;
 
     console.log(`Processing notification for order ${order_id} - Status: ${new_status}`);
 
@@ -139,53 +246,7 @@ const handler = async (req: Request): Promise<Response> => {
       .replace('{order_id}', shortOrderId)
       .replace('{status}', statusInfo.ar);
 
-    const emailHtml = `
-      <!DOCTYPE html>
-      <html dir="rtl" lang="ar">
-      <head>
-        <meta charset="UTF-8">
-        <style>
-          body { font-family: 'Segoe UI', Tahoma, sans-serif; background: #f5f5f5; margin: 0; padding: 20px; }
-          .container { max-width: 500px; margin: 0 auto; background: white; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
-          .header { background: linear-gradient(135deg, ${template.primary_color}, ${template.secondary_color}); color: white; padding: 25px; text-align: center; }
-          .header h1 { margin: 0; font-size: 24px; }
-          .content { padding: 25px; }
-          .status-badge { display: inline-block; padding: 10px 20px; border-radius: 50px; font-weight: bold; font-size: 16px; margin: 15px 0; background: ${template.primary_color}22; color: ${template.primary_color}; }
-          .order-info { background: #f9fafb; padding: 15px; border-radius: 8px; margin: 15px 0; }
-          .order-info p { margin: 5px 0; color: #4b5563; }
-          .status-message { text-align: center; padding: 15px; margin: 15px 0; background: #f0f9ff; border-radius: 8px; color: #1e40af; }
-          .footer { text-align: center; padding: 20px; color: #9ca3af; font-size: 12px; border-top: 1px solid #e5e7eb; }
-        </style>
-      </head>
-      <body>
-        <div class="container">
-          <div class="header">
-            <h1>${template.header_text}</h1>
-          </div>
-          <div class="content">
-            <p style="font-size: 18px; color: #1f2937;">مرحباً ${customerName}،</p>
-            <p style="color: #4b5563;">تم تحديث حالة طلبك:</p>
-            
-            <div style="text-align: center;">
-              <span class="status-badge">${statusInfo.ar}</span>
-            </div>
-            
-            <div class="order-info">
-              <p><strong>رقم الطلب:</strong> ${shortOrderId}</p>
-              <p><strong>المتجر:</strong> ${store_name}</p>
-              <p><strong>الحالة الجديدة:</strong> ${statusInfo.ar}</p>
-            </div>
-            
-            ${statusMessage ? `<div class="status-message">${statusMessage}</div>` : ''}
-          </div>
-          <div class="footer">
-            <p>${template.footer_text}</p>
-            <p>${template.footer_text_en}</p>
-          </div>
-        </div>
-      </body>
-      </html>
-    `;
+    const emailHtml = buildEmailHtml(template, customerName, statusInfo, shortOrderId, store_name, statusMessage);
 
     const emailResponse = await resend.emails.send({
       from: "Waslni <onboarding@resend.dev>",
