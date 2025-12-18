@@ -20,7 +20,8 @@ import {
   Phone,
   Map,
   ChevronDown,
-  ChevronUp
+  ChevronUp,
+  Settings
 } from 'lucide-react';
 import { useDriverGPS } from '@/hooks/useDriverGPS';
 import { DriverNavigationMap } from '@/components/driver/DriverNavigationMap';
@@ -614,6 +615,13 @@ export default function DriverDashboard() {
             >
               <Clock className="w-5 h-5" />
               <span className="text-xs">السجل</span>
+            </button>
+            <button 
+              className="flex flex-col items-center gap-1 text-muted-foreground"
+              onClick={() => navigate('/driver/settings')}
+            >
+              <Settings className="w-5 h-5" />
+              <span className="text-xs">الإعدادات</span>
             </button>
           </div>
         </div>
