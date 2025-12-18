@@ -109,6 +109,66 @@ export type Database = {
         }
         Relationships: []
       }
+      email_templates: {
+        Row: {
+          created_at: string
+          custom_message_cancelled: string | null
+          custom_message_confirmed: string | null
+          custom_message_delivered: string | null
+          custom_message_out_for_delivery: string | null
+          custom_message_pending: string | null
+          custom_message_preparing: string | null
+          custom_message_ready: string | null
+          footer_text: string
+          footer_text_en: string
+          header_text: string
+          id: string
+          primary_color: string
+          secondary_color: string
+          subject_template: string
+          template_key: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          custom_message_cancelled?: string | null
+          custom_message_confirmed?: string | null
+          custom_message_delivered?: string | null
+          custom_message_out_for_delivery?: string | null
+          custom_message_pending?: string | null
+          custom_message_preparing?: string | null
+          custom_message_ready?: string | null
+          footer_text?: string
+          footer_text_en?: string
+          header_text?: string
+          id?: string
+          primary_color?: string
+          secondary_color?: string
+          subject_template: string
+          template_key: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          custom_message_cancelled?: string | null
+          custom_message_confirmed?: string | null
+          custom_message_delivered?: string | null
+          custom_message_out_for_delivery?: string | null
+          custom_message_pending?: string | null
+          custom_message_preparing?: string | null
+          custom_message_ready?: string | null
+          footer_text?: string
+          footer_text_en?: string
+          header_text?: string
+          id?: string
+          primary_color?: string
+          secondary_color?: string
+          subject_template?: string
+          template_key?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       order_items: {
         Row: {
           created_at: string
