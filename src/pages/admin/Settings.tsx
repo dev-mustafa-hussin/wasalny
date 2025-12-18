@@ -4,8 +4,9 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Switch } from '@/components/ui/switch';
 import { useToast } from '@/hooks/use-toast';
-import { Settings as SettingsIcon, Save } from 'lucide-react';
+import { Settings as SettingsIcon, Save, Bell } from 'lucide-react';
 
 interface DeliverySettings {
   id: string;
@@ -18,6 +19,10 @@ export default function Settings() {
   const [settings, setSettings] = useState<DeliverySettings | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [soundEnabled, setSoundEnabled] = useState(() => {
+    const stored = localStorage.getItem('orderSoundNotifications');
+    return stored !== 'false'; // Default to true
+  });
   const { toast } = useToast();
 
   const [formData, setFormData] = useState({
@@ -146,6 +151,36 @@ export default function Settings() {
               {saving ? 'جاري الحفظ...' : 'حفظ الإعدادات'}
             </Button>
           </form>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Bell className="h-5 w-5" />
+            إعدادات الإشعارات
+          </CardTitle>
+          <CardDescription>التحكم في إشعارات الطلبات</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="flex items-center justify-between">
+            <div className="space-y-0.5">
+              <Label>الإشعارات الصوتية</Label>
+              <p className="text-sm text-muted-foreground">
+                تشغيل صوت عند وصول طلب جديد
+              </p>
+            </div>
+            <Switch
+              checked={soundEnabled}
+              onCheckedChange={(checked) => {
+                setSoundEnabled(checked);
+                localStorage.setItem('orderSoundNotifications', String(checked));
+                toast({
+                  title: checked ? 'تم تفعيل الإشعارات الصوتية' : 'تم إيقاف الإشعارات الصوتية',
+                });
+              }}
+            />
+          </div>
         </CardContent>
       </Card>
 

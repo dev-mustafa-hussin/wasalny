@@ -3,8 +3,16 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { useAuth } from '@/hooks/useAuth';
 
+// Check if sound notifications are enabled
+const isSoundEnabled = (): boolean => {
+  const stored = localStorage.getItem('orderSoundNotifications');
+  return stored !== 'false'; // Default to true
+};
+
 // Generate notification sound using Web Audio API
 const playNotificationSound = () => {
+  if (!isSoundEnabled()) return;
+  
   try {
     const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
     
