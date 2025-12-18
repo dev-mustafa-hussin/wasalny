@@ -21,8 +21,15 @@ export default function Settings() {
   const [saving, setSaving] = useState(false);
   const [soundEnabled, setSoundEnabled] = useState(() => {
     const stored = localStorage.getItem('orderSoundNotifications');
-    return stored !== 'false'; // Default to true
+    return stored !== 'false';
   });
+  const [pushEnabled, setPushEnabled] = useState(() => {
+    const stored = localStorage.getItem('orderPushNotifications');
+    return stored !== 'false';
+  });
+  const [pushPermission, setPushPermission] = useState<NotificationPermission>(
+    'Notification' in window ? Notification.permission : 'denied'
+  );
   const { toast } = useToast();
 
   const [formData, setFormData] = useState({
@@ -162,7 +169,7 @@ export default function Settings() {
           </CardTitle>
           <CardDescription>التحكم في إشعارات الطلبات</CardDescription>
         </CardHeader>
-        <CardContent>
+        <CardContent className="space-y-6">
           <div className="flex items-center justify-between">
             <div className="space-y-0.5">
               <Label>الإشعارات الصوتية</Label>
@@ -177,6 +184,43 @@ export default function Settings() {
                 localStorage.setItem('orderSoundNotifications', String(checked));
                 toast({
                   title: checked ? 'تم تفعيل الإشعارات الصوتية' : 'تم إيقاف الإشعارات الصوتية',
+                });
+              }}
+            />
+          </div>
+
+          <div className="flex items-center justify-between">
+            <div className="space-y-0.5">
+              <Label>إشعارات المتصفح (Push)</Label>
+              <p className="text-sm text-muted-foreground">
+                عرض إشعار في المتصفح عند وصول طلب جديد
+              </p>
+              {pushPermission === 'denied' && (
+                <p className="text-xs text-destructive">
+                  تم حظر الإشعارات. يرجى السماح بها من إعدادات المتصفح.
+                </p>
+              )}
+            </div>
+            <Switch
+              checked={pushEnabled && pushPermission === 'granted'}
+              disabled={pushPermission === 'denied'}
+              onCheckedChange={async (checked) => {
+                if (checked && pushPermission !== 'granted') {
+                  const permission = await Notification.requestPermission();
+                  setPushPermission(permission);
+                  if (permission !== 'granted') {
+                    toast({
+                      title: 'لم يتم السماح بالإشعارات',
+                      description: 'يرجى السماح بالإشعارات من إعدادات المتصفح',
+                      variant: 'destructive',
+                    });
+                    return;
+                  }
+                }
+                setPushEnabled(checked);
+                localStorage.setItem('orderPushNotifications', String(checked));
+                toast({
+                  title: checked ? 'تم تفعيل إشعارات المتصفح' : 'تم إيقاف إشعارات المتصفح',
                 });
               }}
             />
