@@ -13,6 +13,7 @@ import { Separator } from '@/components/ui/separator';
 import { StarRating } from '@/components/ui/star-rating';
 import { ETACard } from '@/components/customer/ETACard';
 import { CustomerOrderMap } from '@/components/customer/CustomerOrderMap';
+import { PushNotificationToggle } from '@/components/customer/PushNotificationToggle';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -445,6 +446,9 @@ export default function OrderTracking() {
               deliveryLng={order.delivery_lng}
               driverId={order.driver_id}
             />
+
+            {/* Push Notifications */}
+            <PushNotificationToggle />
 
             {/* Status Timeline */}
             {order.status !== 'cancelled' && (
