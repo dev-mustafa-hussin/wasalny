@@ -17,6 +17,11 @@ import {
 } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Calendar as CalendarComponent } from '@/components/ui/calendar';
+import { format, differenceInDays } from 'date-fns';
+import { ar } from 'date-fns/locale';
+import { cn } from '@/lib/utils';
 
 interface OrderData {
   id: string;
@@ -51,22 +56,44 @@ export default function Reports() {
   const [period, setPeriod] = useState('30');
   const [selectedStore, setSelectedStore] = useState<string>('all');
   const [selectedStatus, setSelectedStatus] = useState<string>('all');
+  const [startDate, setStartDate] = useState<Date | undefined>(undefined);
+  const [endDate, setEndDate] = useState<Date | undefined>(undefined);
   const [dailyStats, setDailyStats] = useState<DailyStats[]>([]);
   const [storeStats, setStoreStats] = useState<StoreStats[]>([]);
 
+  const isCustomDateRange = startDate && endDate;
+
   useEffect(() => {
     fetchData();
-  }, [period, selectedStore, selectedStatus]);
+  }, [period, selectedStore, selectedStatus, startDate, endDate]);
 
   const fetchData = async () => {
     setLoading(true);
-    const daysAgo = new Date();
-    daysAgo.setDate(daysAgo.getDate() - parseInt(period));
+    
+    let fromDate: Date;
+    let toDate: Date = new Date();
+    toDate.setHours(23, 59, 59, 999);
+
+    if (isCustomDateRange) {
+      fromDate = new Date(startDate);
+      fromDate.setHours(0, 0, 0, 0);
+      toDate = new Date(endDate);
+      toDate.setHours(23, 59, 59, 999);
+    } else {
+      fromDate = new Date();
+      fromDate.setDate(fromDate.getDate() - parseInt(period));
+      fromDate.setHours(0, 0, 0, 0);
+    }
+
+    const daysDiff = isCustomDateRange 
+      ? differenceInDays(endDate, startDate) + 1 
+      : parseInt(period);
 
     let ordersQuery = supabase
       .from('orders')
       .select('id, total_amount, delivery_fee, status, created_at, store_id')
-      .gte('created_at', daysAgo.toISOString());
+      .gte('created_at', fromDate.toISOString())
+      .lte('created_at', toDate.toISOString());
 
     if (selectedStore !== 'all') {
       ordersQuery = ordersQuery.eq('store_id', selectedStore);
@@ -90,9 +117,9 @@ export default function Reports() {
     // Calculate daily stats
     const dailyMap: Record<string, { orders: number; revenue: number }> = {};
     
-    // Initialize all days
-    for (let i = parseInt(period) - 1; i >= 0; i--) {
-      const date = new Date();
+    // Initialize all days in range
+    for (let i = daysDiff - 1; i >= 0; i--) {
+      const date = new Date(toDate);
       date.setDate(date.getDate() - i);
       const dateStr = date.toLocaleDateString('ar-SA', { month: 'short', day: 'numeric' });
       dailyMap[dateStr] = { orders: 0, revenue: 0 };
@@ -163,9 +190,12 @@ export default function Reports() {
   const clearFilters = () => {
     setSelectedStore('all');
     setSelectedStatus('all');
+    setStartDate(undefined);
+    setEndDate(undefined);
+    setPeriod('30');
   };
 
-  const hasActiveFilters = selectedStore !== 'all' || selectedStatus !== 'all';
+  const hasActiveFilters = selectedStore !== 'all' || selectedStatus !== 'all' || isCustomDateRange;
 
   const exportToCSV = () => {
     const headers = ['التاريخ', 'رقم الطلب', 'المبلغ', 'رسوم التوصيل', 'الحالة'];
@@ -201,7 +231,16 @@ export default function Reports() {
           <p className="text-muted-foreground">تقارير تفصيلية للطلبات والإيرادات</p>
         </div>
         <div className="flex flex-wrap items-center gap-3">
-          <Select value={period} onValueChange={setPeriod}>
+          <Select 
+            value={isCustomDateRange ? 'custom' : period} 
+            onValueChange={(val) => {
+              if (val !== 'custom') {
+                setStartDate(undefined);
+                setEndDate(undefined);
+                setPeriod(val);
+              }
+            }}
+          >
             <SelectTrigger className="w-36">
               <Calendar className="h-4 w-4 ml-2" />
               <SelectValue />
@@ -210,6 +249,7 @@ export default function Reports() {
               <SelectItem value="7">آخر 7 أيام</SelectItem>
               <SelectItem value="30">آخر 30 يوم</SelectItem>
               <SelectItem value="90">آخر 90 يوم</SelectItem>
+              {isCustomDateRange && <SelectItem value="custom">نطاق مخصص</SelectItem>}
             </SelectContent>
           </Select>
           <Button onClick={exportToCSV} variant="outline">
@@ -227,7 +267,69 @@ export default function Reports() {
               <Filter className="h-4 w-4 text-muted-foreground" />
               <span className="text-sm font-medium">فلترة:</span>
             </div>
-            
+
+            {/* Custom Date Range */}
+            <div className="flex items-center gap-2">
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="outline"
+                    className={cn(
+                      "w-36 justify-start text-right font-normal",
+                      !startDate && "text-muted-foreground"
+                    )}
+                  >
+                    <Calendar className="h-4 w-4 ml-2" />
+                    {startDate ? format(startDate, "dd/MM/yyyy") : "من تاريخ"}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0" align="start">
+                  <CalendarComponent
+                    mode="single"
+                    selected={startDate}
+                    onSelect={(date) => {
+                      setStartDate(date);
+                      if (date && !endDate) {
+                        setEndDate(new Date());
+                      }
+                    }}
+                    disabled={(date) => date > new Date()}
+                    initialFocus
+                    className="pointer-events-auto"
+                  />
+                </PopoverContent>
+              </Popover>
+
+              <span className="text-muted-foreground">-</span>
+
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="outline"
+                    className={cn(
+                      "w-36 justify-start text-right font-normal",
+                      !endDate && "text-muted-foreground"
+                    )}
+                  >
+                    <Calendar className="h-4 w-4 ml-2" />
+                    {endDate ? format(endDate, "dd/MM/yyyy") : "إلى تاريخ"}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0" align="start">
+                  <CalendarComponent
+                    mode="single"
+                    selected={endDate}
+                    onSelect={setEndDate}
+                    disabled={(date) => date > new Date() || (startDate && date < startDate)}
+                    initialFocus
+                    className="pointer-events-auto"
+                  />
+                </PopoverContent>
+              </Popover>
+            </div>
+          </div>
+
+          <div className="flex flex-wrap items-center gap-4 mt-4">
             <Select value={selectedStore} onValueChange={setSelectedStore}>
               <SelectTrigger className="w-44">
                 <SelectValue placeholder="جميع المتاجر" />
@@ -262,6 +364,11 @@ export default function Reports() {
 
           {hasActiveFilters && (
             <div className="flex flex-wrap gap-2 mt-3">
+              {isCustomDateRange && (
+                <Badge variant="secondary">
+                  الفترة: {format(startDate, "dd/MM/yyyy")} - {format(endDate, "dd/MM/yyyy")}
+                </Badge>
+              )}
               {selectedStore !== 'all' && (
                 <Badge variant="secondary">
                   المتجر: {stores.find(s => s.id === selectedStore)?.name}
