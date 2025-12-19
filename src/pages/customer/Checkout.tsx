@@ -1,19 +1,19 @@
-import { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import { ArrowRight, MapPin, CreditCard, Loader2 } from 'lucide-react';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import * as z from 'zod';
-import { supabase } from '@/integrations/supabase/client';
-import { CustomerHeader } from '@/components/customer/CustomerHeader';
-import { useCart } from '@/contexts/CartContext';
-import { useAuth } from '@/hooks/useAuth';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
-import { Separator } from '@/components/ui/separator';
-import { toast } from 'sonner';
+import { useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import { ArrowRight, MapPin, CreditCard, Loader2 } from "lucide-react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import * as z from "zod";
+import { supabase } from "@/integrations/supabase/client";
+import { CustomerHeader } from "@/components/customer/CustomerHeader";
+import { useCart } from "@/contexts/CartContext";
+import { useAuth } from "@/hooks/useAuth";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Separator } from "@/components/ui/separator";
+import { toast } from "sonner";
 import {
   Form,
   FormControl,
@@ -21,10 +21,11 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-} from '@/components/ui/form';
+} from "@/components/ui/form";
+import { LocationPicker } from "@/components/common/LocationPicker";
 
 const checkoutSchema = z.object({
-  address: z.string().min(10, 'يرجى إدخال عنوان تفصيلي'),
+  address: z.string().min(5, "يرجى تحديد موقع التوصيل"),
   notes: z.string().optional(),
 });
 
@@ -35,12 +36,16 @@ export default function Checkout() {
   const { user } = useAuth();
   const navigate = useNavigate();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [coordinates, setCoordinates] = useState<{
+    lat: number;
+    lng: number;
+  } | null>(null);
 
   const form = useForm<CheckoutForm>({
     resolver: zodResolver(checkoutSchema),
     defaultValues: {
-      address: '',
-      notes: '',
+      address: "",
+      notes: "",
     },
   });
 
@@ -48,25 +53,41 @@ export default function Checkout() {
   const deliveryFee = 10; // Base delivery fee
   const total = subtotal + deliveryFee;
 
+  const handleLocationSelect = (loc: {
+    lat: number;
+    lng: number;
+    address: string;
+  }) => {
+    setCoordinates({ lat: loc.lat, lng: loc.lng });
+    form.setValue("address", loc.address);
+  };
+
   const onSubmit = async (data: CheckoutForm) => {
     if (!user || items.length === 0) return;
+
+    if (!coordinates) {
+      toast.error("يرجى تحديد الموقع على الخريطة");
+      return;
+    }
 
     setIsSubmitting(true);
     try {
       const storeId = getCurrentStoreId();
-      if (!storeId) throw new Error('Store not found');
+      if (!storeId) throw new Error("Store not found");
 
       // Create order
       const { data: order, error: orderError } = await supabase
-        .from('orders')
+        .from("orders")
         .insert({
           customer_id: user.id,
           store_id: storeId,
           delivery_address: data.address,
+          delivery_lat: coordinates.lat,
+          delivery_lng: coordinates.lng,
           notes: data.notes || null,
           total_amount: total,
           delivery_fee: deliveryFee,
-          status: 'pending',
+          status: "pending",
         })
         .select()
         .single();
@@ -83,24 +104,26 @@ export default function Checkout() {
       }));
 
       const { error: itemsError } = await supabase
-        .from('order_items')
+        .from("order_items")
         .insert(orderItems);
 
       if (itemsError) throw itemsError;
 
       clearCart();
-      toast.success('تم إرسال طلبك بنجاح!');
+      toast.success("تم إرسال طلبك بنجاح!", {
+        description: "يمكنك تتبع طلبك الآن على الخريطة",
+      });
       navigate(`/order-success/${order.id}`);
     } catch (error) {
-      console.error('Error creating order:', error);
-      toast.error('حدث خطأ أثناء إرسال الطلب');
+      console.error("Error creating order:", error);
+      toast.error("حدث خطأ أثناء إرسال الطلب");
     } finally {
       setIsSubmitting(false);
     }
   };
 
   if (items.length === 0) {
-    navigate('/cart');
+    navigate("/cart");
     return null;
   }
 
@@ -126,22 +149,28 @@ export default function Checkout() {
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <MapPin className="h-5 w-5" />
-                  عنوان التوصيل
+                  موقع التوصيل
                 </CardTitle>
               </CardHeader>
-              <CardContent>
+              <CardContent className="space-y-4">
+                <LocationPicker onLocationSelect={handleLocationSelect} />
+
                 <Form {...form}>
-                  <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+                  <form
+                    onSubmit={form.handleSubmit(onSubmit)}
+                    className="space-y-4"
+                  >
                     <FormField
                       control={form.control}
                       name="address"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>العنوان التفصيلي</FormLabel>
+                          <FormLabel>العنوان (يتم تحديده تلقائياً)</FormLabel>
                           <FormControl>
                             <Textarea
-                              placeholder="مثال: حي النزهة، شارع الملك فهد، مبنى 5، شقة 12"
                               {...field}
+                              readOnly
+                              className="bg-muted resize-none"
                             />
                           </FormControl>
                           <FormMessage />
@@ -230,7 +259,7 @@ export default function Checkout() {
                       جاري إرسال الطلب...
                     </>
                   ) : (
-                    'تأكيد الطلب'
+                    "تأكيد الطلب"
                   )}
                 </Button>
               </CardContent>
