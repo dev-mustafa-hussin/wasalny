@@ -24,20 +24,24 @@ async function fixStore() {
     console.log('✅ Email Confirmed.');
 
     // 3. Insert Role
+    await client.query("DELETE FROM public.user_roles WHERE user_id = $1", [userId]);
     await client.query(`
       INSERT INTO public.user_roles (user_id, role)
       VALUES ($1, 'store_owner')
-      ON CONFLICT (user_id) DO UPDATE SET role = 'store_owner'
     `, [userId]);
     console.log('✅ Role set to store_owner.');
 
     // 4. Insert Profile (if missing)
-    await client.query(`
-      INSERT INTO public.profiles (user_id, full_name, phone)
-      VALUES ($1, 'SecureForce Store Owner', '0555555555')
-      ON CONFLICT (user_id) DO NOTHING
-    `, [userId]);
-    console.log('✅ Profile ensured.');
+    const profCheck = await client.query("SELECT id FROM public.profiles WHERE user_id = $1", [userId]);
+    if (profCheck.rows.length === 0) {
+        await client.query(`
+          INSERT INTO public.profiles (user_id, full_name, phone)
+          VALUES ($1, 'SecureForce Store Owner', '0555555555')
+        `, [userId]);
+        console.log('✅ Profile created.');
+    } else {
+        console.log('✅ Profile exists.');
+    }
 
     // 5. Insert Store (if missing)
     const resStore = await client.query("SELECT id FROM public.stores WHERE owner_id = $1", [userId]);
