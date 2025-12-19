@@ -547,6 +547,15 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      get_driver_earnings: { Args: { driver_user_id: string }; Returns: number }
+      get_masked_coordinates: {
+        Args: { coord: number; is_driver: boolean; order_status: string }
+        Returns: number
+      }
+      get_masked_delivery_address: {
+        Args: { full_address: string; is_driver: boolean; order_status: string }
+        Returns: string
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
