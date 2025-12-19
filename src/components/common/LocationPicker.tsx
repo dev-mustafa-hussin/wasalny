@@ -88,9 +88,9 @@ export function LocationPicker({
 
     map.current = new mapboxgl.Map({
       container: mapContainer.current,
-      style: "mapbox://styles/mapbox/streets-v12",
+      style: "mapbox://styles/mapbox/satellite-streets-v12", // Satellite view for better detail
       center: [initialLng || defaultLng, initialLat || defaultLat],
-      zoom: 13,
+      zoom: 15, // Zoom in closer
     });
 
     map.current.addControl(new mapboxgl.NavigationControl(), "top-left");
