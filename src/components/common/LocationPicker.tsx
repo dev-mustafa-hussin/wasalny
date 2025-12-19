@@ -35,6 +35,14 @@ export function LocationPicker({
 
   useEffect(() => {
     const fetchToken = async () => {
+      // First try to get from environment variable
+      const envToken = import.meta.env.VITE_MAPBOX_TOKEN;
+      if (envToken) {
+        setMapboxToken(envToken);
+        return;
+      }
+
+      // Fallback to Edge Function
       try {
         const { data, error } = await supabase.functions.invoke(
           "get-mapbox-token"
@@ -43,7 +51,7 @@ export function LocationPicker({
         setMapboxToken(data.token);
       } catch (err) {
         console.error("Error fetching Mapbox token:", err);
-        toast.error("خطأ في تحميل الخريطة");
+        toast.error("خطأ في تحميل مفتاح الخريطة");
       }
     };
     fetchToken();
