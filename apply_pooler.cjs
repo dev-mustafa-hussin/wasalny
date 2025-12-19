@@ -17,8 +17,12 @@ const config = {
 
 // Alternative configuration based on user input exactly
 const userConfig = {
-  user: 'postgres', // User said postgres:PASSWORD
-  host: 'aws-1-eu-west-1.pooler.supabase.com',
+  user: 'postgres.dfcyclxrtcnymyuolbyi',
+  host: 'aws-0-eu-central-1.pooler.supabase.com', // Trying Frankfurt because West-1 gave 'Tenant not found' might also mean wrong region for this tenant
+  // Let's try to infer region from the project URL or previous error?
+  // Previous error: 2a05:d018... is Frankfurt.
+  // The user suggested West-1, but the tenant might not be there.
+  // I will try 'aws-0-eu-central-1.pooler.supabase.com' first as it matches the standard EU location.
   database: 'postgres',
   password: 'fms2225115FMS@@@',
   port: 5432,
