@@ -99,6 +99,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     if (data.user) {
       try {
+        // Create Profile (Common for all roles)
+        const { error: profileError } = await supabase.from("profiles").insert({
+          user_id: data.user.id,
+          full_name: fullName,
+        });
+        if (profileError)
+          console.error("Error creating profile:", profileError);
+
         if (role === "driver") {
           console.log("Attempting to create driver profile for:", data.user.id);
           const { error: driverError } = await supabase.from("drivers").insert({
