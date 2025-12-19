@@ -78,16 +78,58 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return { error };
   };
 
-  const signUp = async (email: string, password: string, fullName: string) => {
+  const signUp = async (
+    email: string,
+    password: string,
+    fullName: string,
+    role: string = "customer",
+    additionalData: any = {}
+  ) => {
     const redirectUrl = `${window.location.origin}/`;
-    const { error } = await supabase.auth.signUp({
+    const { data, error } = await supabase.auth.signUp({
       email,
       password,
       options: {
         emailRedirectTo: redirectUrl,
-        data: { full_name: fullName },
+        data: { full_name: fullName, role: role }, // Store role in user metadata as well
       },
     });
+
+    if (error) return { error };
+
+    if (data.user) {
+      try {
+        if (role === "driver") {
+          const { error: driverError } = await supabase.from("drivers").insert({
+            user_id: data.user.id,
+            vehicle_type: additionalData.vehicleType,
+            vehicle_number: additionalData.vehicleNumber,
+            status: "pending",
+          });
+          if (driverError)
+            console.error("Error creating driver profile:", driverError);
+        } else if (role === "store_owner") {
+          const { error: storeError } = await supabase.from("stores").insert({
+            owner_id: data.user.id,
+            name: additionalData.storeName,
+            type: additionalData.storeType || "restaurant",
+            phone: additionalData.storePhone,
+            status: "pending",
+          });
+          if (storeError) console.error("Error creating store:", storeError);
+        }
+
+        // Upsert role to user_roles table
+        const { error: roleError } = await supabase.from("user_roles").upsert({
+          user_id: data.user.id,
+          role: role as any,
+        });
+        if (roleError) console.error("Error setting user role:", roleError);
+      } catch (err) {
+        console.error("Error in post-signup operations:", err);
+      }
+    }
+
     return { error };
   };
 
