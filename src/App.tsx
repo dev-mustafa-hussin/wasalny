@@ -17,6 +17,7 @@ import DriversTracking from "./pages/admin/DriversTracking";
 import Settings from "./pages/admin/Settings";
 import Reports from "./pages/admin/Reports";
 import EmailTemplates from "./pages/admin/EmailTemplates";
+import Approvals from "./pages/admin/Approvals";
 // Customer pages
 import Home from "./pages/customer/Home";
 import StoreDetail from "./pages/customer/StoreDetail";
@@ -52,14 +53,14 @@ const App = () => (
               <Route path="/my-orders" element={<MyOrders />} />
               <Route path="/order/:id" element={<OrderTracking />} />
               <Route path="/auth" element={<Auth />} />
-              
+
               {/* Driver Routes */}
               <Route path="/driver" element={<DriverDashboard />} />
               <Route path="/driver/earnings" element={<DriverEarnings />} />
               <Route path="/driver/history" element={<DriverHistory />} />
               <Route path="/driver/ratings" element={<DriverRatings />} />
               <Route path="/driver/settings" element={<DriverSettings />} />
-              
+
               {/* Admin Routes */}
               <Route path="/admin" element={<AdminLayout />}>
                 <Route index element={<Dashboard />} />
@@ -71,8 +72,9 @@ const App = () => (
                 <Route path="reports" element={<Reports />} />
                 <Route path="email-templates" element={<EmailTemplates />} />
                 <Route path="settings" element={<Settings />} />
+                <Route path="approvals" element={<Approvals />} />
               </Route>
-              
+
               <Route path="*" element={<NotFound />} />
             </Routes>
           </BrowserRouter>

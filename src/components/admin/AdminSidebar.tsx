@@ -25,6 +25,7 @@ import {
   FileText,
   Mail,
   MapPin,
+  ClipboardCheck,
 } from "lucide-react";
 
 const menuItems = [
@@ -32,7 +33,9 @@ const menuItems = [
   { title: "المتاجر", url: "/admin/stores", icon: Store },
   { title: "المنتجات", url: "/admin/products", icon: Package },
   { title: "الطلبات", url: "/admin/orders", icon: ShoppingCart },
-  { title: "المندوبين", url: "/admin/drivers", icon: Users },
+  { title: "المستخدمين", url: "/admin/users", icon: Users },
+  { title: "طلبات الانضمام", url: "/admin/approvals", icon: ClipboardCheck },
+  { title: "المندوبين", url: "/admin/drivers", icon: Truck },
   { title: "تتبع المندوبين", url: "/admin/drivers-tracking", icon: MapPin },
   { title: "التقارير", url: "/admin/reports", icon: FileText },
   { title: "قوالب البريد", url: "/admin/email-templates", icon: Mail },
