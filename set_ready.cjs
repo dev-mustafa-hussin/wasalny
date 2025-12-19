@@ -6,28 +6,37 @@ const config = {
   ssl: { rejectUnauthorized: false }
 };
 
-async function setOrderReady() {
-  console.log('--- UPDATING ORDER STATUS TO READY ---');
+async function setReady() {
+  console.log('--- UPDATING STORE ORDER STATUS ---');
   const client = new Client(config);
 
   try {
     await client.connect();
     
-    // Get the latest PENDING order
+    // 1. Get latest pending
     const res = await client.query(`
-      SELECT id, status 
-      FROM public.orders 
+      SELECT id FROM public.orders 
       WHERE status = 'pending'
-      ORDER BY created_at DESC 
+      ORDER BY created_at DESC
       LIMIT 1
     `);
 
-    if (res.rowCount > 0) {
-      console.log(`✅ Updated ${res.rowCount} orders to 'ready'.`);
-      res.rows.forEach(r => console.log(`   - Order ${r.id}: ${r.status}`));
-    } else {
+    if (res.rows.length === 0) {
       console.log('⚠️ No pending orders found.');
+      return;
     }
+
+    const orderId = res.rows[0].id;
+    console.log(`Found Pending Order: ${orderId}`);
+
+    // 2. Update to Ready
+    await client.query(`
+      UPDATE public.orders
+      SET status = 'ready'
+      WHERE id = $1
+    `, [orderId]);
+
+    console.log('✅ Order marked as READY by Store (Simulated).');
 
   } catch (err) {
     console.log('❌ Error:', err.message);
@@ -36,4 +45,4 @@ async function setOrderReady() {
   }
 }
 
-setOrderReady();
+setReady();
