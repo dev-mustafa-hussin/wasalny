@@ -15,7 +15,7 @@ async function checkOrder() {
     
     // Get the latest ready/out_for_delivery order
     const res = await client.query(`
-      SELECT id, status, delivery_address, delivery_lat, delivery_lng, driver_id
+      SELECT id, status, delivery_address, delivery_lat, delivery_lng, driver_id, created_at
       FROM public.orders 
       ORDER BY created_at DESC 
       LIMIT 1
@@ -25,6 +25,7 @@ async function checkOrder() {
       const order = res.rows[0];
       console.log('Order Details:');
       console.log(`- ID: ${order.id}`);
+      console.log(`- Created At: ${order.created_at}`);
       console.log(`- Status: ${order.status}`);
       console.log(`- Driver ID: ${order.driver_id}`);
       console.log(`- Address: ${order.delivery_address}`);
