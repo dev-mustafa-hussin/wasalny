@@ -36,15 +36,24 @@ export default function Auth() {
   const [vehicleNumber, setVehicleNumber] = useState("");
 
   const [isLoading, setIsLoading] = useState(false);
-  const { user, signIn, signUp } = useAuth();
+  const { user, userRole, signIn, signUp } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
 
   useEffect(() => {
-    if (user) {
-      navigate("/admin");
+    if (user && userRole) {
+      if (userRole === "admin") {
+        navigate("/admin");
+      } else if (userRole === "driver") {
+        navigate("/driver");
+      } else if (userRole === "store_owner") {
+        navigate("/admin"); // Assuming store owners use admin panel for now, or TODO: Create /store
+      } else {
+        // Default to customer
+        navigate("/");
+      }
     }
-  }, [user, navigate]);
+  }, [user, userRole, navigate]);
 
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
