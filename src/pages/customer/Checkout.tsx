@@ -53,14 +53,13 @@ export default function Checkout() {
   const deliveryFee = 10; // Base delivery fee
   const total = subtotal + deliveryFee;
 
-  const handleLocationSelect = (loc: {
-    lat: number;
-    lng: number;
-    address: string;
-  }) => {
-    setCoordinates({ lat: loc.lat, lng: loc.lng });
-    form.setValue("address", loc.address);
-  };
+  const handleLocationSelect = useCallback(
+    (loc: { lat: number; lng: number; address: string }) => {
+      setCoordinates({ lat: loc.lat, lng: loc.lng });
+      form.setValue("address", loc.address, { shouldValidate: true });
+    },
+    [form]
+  );
 
   const onSubmit = async (data: CheckoutForm) => {
     if (!user || items.length === 0) return;
