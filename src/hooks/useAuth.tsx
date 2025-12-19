@@ -100,14 +100,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (data.user) {
       try {
         if (role === "driver") {
+          console.log("Attempting to create driver profile for:", data.user.id);
           const { error: driverError } = await supabase.from("drivers").insert({
             user_id: data.user.id,
             vehicle_type: additionalData.vehicleType,
             vehicle_number: additionalData.vehicleNumber,
             status: "pending",
           });
-          if (driverError)
+          if (driverError) {
             console.error("Error creating driver profile:", driverError);
+            return { error: driverError };
+          } else {
+            console.log("Driver profile created successfully");
+          }
         } else if (role === "store_owner") {
           const { error: storeError } = await supabase.from("stores").insert({
             owner_id: data.user.id,
