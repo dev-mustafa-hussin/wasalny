@@ -13,12 +13,13 @@ async function setOrderReady() {
   try {
     await client.connect();
     
-    // Find the most recent pending order
+    // Get the latest PENDING order
     const res = await client.query(`
-      UPDATE public.orders
-      SET status = 'ready'
+      SELECT id, status 
+      FROM public.orders 
       WHERE status = 'pending'
-      RETURNING id, status
+      ORDER BY created_at DESC 
+      LIMIT 1
     `);
 
     if (res.rowCount > 0) {
