@@ -10,6 +10,7 @@ import NotFound from "./pages/NotFound";
 import { AdminLayout } from "./components/admin/AdminLayout";
 import { StoreOwnerLayout } from "./components/store/StoreOwnerLayout";
 import { DriverLayout } from "./components/driver/DriverLayout";
+import { CustomerLayout } from "./components/customer/CustomerLayout";
 import Dashboard from "./pages/admin/Dashboard";
 import Stores from "./pages/admin/Stores";
 import Products from "./pages/admin/Products";
@@ -47,13 +48,15 @@ const App = () => (
           <BrowserRouter>
             <Routes>
               {/* Customer Routes */}
-              <Route path="/" element={<Home />} />
-              <Route path="/store/:id" element={<StoreDetail />} />
-              <Route path="/cart" element={<Cart />} />
-              <Route path="/checkout" element={<Checkout />} />
-              <Route path="/order-success/:id" element={<OrderSuccess />} />
-              <Route path="/my-orders" element={<MyOrders />} />
-              <Route path="/order/:id" element={<OrderTracking />} />
+              <Route element={<CustomerLayout />}>
+                <Route path="/" element={<Home />} />
+                <Route path="/store/:id" element={<StoreDetail />} />
+                <Route path="/cart" element={<Cart />} />
+                <Route path="/checkout" element={<Checkout />} />
+                <Route path="/order-success/:id" element={<OrderSuccess />} />
+                <Route path="/my-orders" element={<MyOrders />} />
+                <Route path="/order/:id" element={<OrderTracking />} />
+              </Route>
               <Route path="/auth" element={<Auth />} />
 
               {/* Driver Routes */}

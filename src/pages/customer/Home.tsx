@@ -1,40 +1,40 @@
-import { useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
-import { Search, Utensils, ShoppingBag } from 'lucide-react';
-import { supabase } from '@/integrations/supabase/client';
-import { CustomerHeader } from '@/components/customer/CustomerHeader';
-import { StoreCard } from '@/components/customer/StoreCard';
-import { Input } from '@/components/ui/input';
-import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Skeleton } from '@/components/ui/skeleton';
+import { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { Search, Utensils, ShoppingBag } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { CustomerHeader } from "@/components/customer/CustomerHeader";
+import { StoreCard } from "@/components/customer/StoreCard";
+import { Input } from "@/components/ui/input";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export default function Home() {
-  const [search, setSearch] = useState('');
-  const [filter, setFilter] = useState<'all' | 'restaurant' | 'market'>('all');
+  const [search, setSearch] = useState("");
+  const [filter, setFilter] = useState<"all" | "restaurant" | "market">("all");
 
   const { data: stores, isLoading } = useQuery({
-    queryKey: ['stores'],
+    queryKey: ["stores"],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from('stores')
-        .select('*')
-        .eq('is_active', true)
-        .order('created_at', { ascending: false });
+        .from("stores")
+        .select("*")
+        .eq("is_active", true)
+        .order("created_at", { ascending: false });
       if (error) throw error;
       return data;
     },
   });
 
   const filteredStores = stores?.filter((store) => {
-    const matchesSearch = store.name.toLowerCase().includes(search.toLowerCase());
-    const matchesFilter = filter === 'all' || store.type === filter;
+    const matchesSearch = store.name
+      .toLowerCase()
+      .includes(search.toLowerCase());
+    const matchesFilter = filter === "all" || store.type === filter;
     return matchesSearch && matchesFilter;
   });
 
   return (
     <div className="min-h-screen bg-background">
-      <CustomerHeader />
-      
       {/* Hero Section */}
       <section className="bg-gradient-to-br from-primary/10 via-background to-secondary/10 py-12">
         <div className="container">
@@ -44,7 +44,7 @@ export default function Home() {
           <p className="text-muted-foreground text-center mb-8">
             توصيل سريع لباب منزلك
           </p>
-          
+
           {/* Search */}
           <div className="max-w-md mx-auto relative">
             <Search className="absolute right-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
@@ -60,7 +60,10 @@ export default function Home() {
 
       {/* Filters */}
       <section className="container py-6">
-        <Tabs value={filter} onValueChange={(v) => setFilter(v as typeof filter)}>
+        <Tabs
+          value={filter}
+          onValueChange={(v) => setFilter(v as typeof filter)}
+        >
           <TabsList className="grid w-full max-w-md mx-auto grid-cols-3">
             <TabsTrigger value="all">الكل</TabsTrigger>
             <TabsTrigger value="restaurant" className="flex items-center gap-1">
