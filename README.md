@@ -1,5 +1,8 @@
 # Wasalny 🚚
 
+[![Frontend CI](https://github.com/dev-mustafa-hussin/build-your-app/actions/workflows/ci.yml/badge.svg)](https://github.com/dev-mustafa-hussin/build-your-app/actions/workflows/ci.yml)
+[![License: AGPL v3](https://img.shields.io/badge/License-AGPL_v3-blue.svg)](https://www.gnu.org/licenses/agpl-3.0)
+
 **Wasalny** is a comprehensive delivery and logistics application designed to streamline order management, driver coordination, and customer deliveries. It leverages interactive maps and a modern real-time architecture to ensure efficient operations.
 
 [Live Demo](https://wasalny-six.vercel.app/)
