@@ -30,8 +30,8 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Separator } from "@/components/ui/separator";
 import { StarRating } from "@/components/ui/star-rating";
-import { ETACard } from "@/components/customer/ETACard";
-import { CustomerOrderMap } from "@/components/customer/CustomerOrderMap";
+// import { ETACard } from "@/components/customer/ETACard";
+// import { CustomerOrderMap } from "@/components/customer/CustomerOrderMap";
 import { PushNotificationToggle } from "@/components/customer/PushNotificationToggle";
 import { DriverRatingDialog } from "@/components/customer/DriverRatingDialog";
 import {
@@ -96,10 +96,8 @@ export default function OrderTracking() {
   const [rating, setRating] = useState(0);
   const [isSubmittingRating, setIsSubmittingRating] = useState(false);
   const [showDriverRatingDialog, setShowDriverRatingDialog] = useState(false);
-  const [driverRatingExists, setDriverRatingExists] = useState(false);
-  const [driverLocation, setDriverLocation] = useState<DriverLocation | null>(
-    null
-  );
+  // const [driverRatingExists, setDriverRatingExists] = useState(false); // Unused for now
+  // const [driverLocation, setDriverLocation] = useState<DriverLocation | null>(null);
   const [isChatOpen, setIsChatOpen] = useState(false);
 
   const { data: order, isLoading } = useQuery({
@@ -257,221 +255,11 @@ export default function OrderTracking() {
   const currentStep = getCurrentStepIndex();
 
   const printInvoice = () => {
-    if (!order) return;
-
-    const subtotal = Number(order.total_amount) - Number(order.delivery_fee);
-    const printWindow = window.open("", "_blank");
-    if (!printWindow) {
-      toast.error("يرجى السماح بالنوافذ المنبثقة للطباعة");
-      return;
-    }
-
-    const invoiceHtml = `
-      <!DOCTYPE html>
-      <html dir="rtl" lang="ar">
-      <head>
-        <meta charset="UTF-8">
-        <title>فاتورة الطلب #${order.id.slice(0, 8).toUpperCase()}</title>
-        <style>
-          * { margin: 0; padding: 0; box-sizing: border-box; }
-          body { font-family: 'Segoe UI', Tahoma, sans-serif; padding: 20px; max-width: 400px; margin: 0 auto; }
-          .header { text-align: center; border-bottom: 2px dashed #333; padding-bottom: 15px; margin-bottom: 15px; }
-          .header h1 { font-size: 24px; margin-bottom: 5px; }
-          .header p { font-size: 12px; color: #666; }
-          .order-info { margin-bottom: 15px; font-size: 13px; }
-          .order-info p { margin: 5px 0; }
-          .store-info { background: #f5f5f5; padding: 10px; border-radius: 5px; margin-bottom: 15px; }
-          .store-info h3 { font-size: 14px; margin-bottom: 5px; }
-          .store-info p { font-size: 12px; color: #666; }
-          .items { border-top: 1px solid #ddd; border-bottom: 1px solid #ddd; padding: 10px 0; margin: 15px 0; }
-          .item { display: flex; justify-content: space-between; margin: 8px 0; font-size: 13px; }
-          .totals { margin-top: 15px; }
-          .totals .row { display: flex; justify-content: space-between; margin: 5px 0; font-size: 13px; }
-          .totals .total { font-weight: bold; font-size: 16px; border-top: 2px solid #333; padding-top: 10px; margin-top: 10px; }
-          .address { background: #f9f9f9; padding: 10px; border-radius: 5px; margin: 15px 0; font-size: 12px; }
-          .footer { text-align: center; margin-top: 20px; font-size: 12px; color: #666; border-top: 2px dashed #333; padding-top: 15px; }
-          @media print { body { padding: 10px; } }
-        </style>
-      </head>
-      <body>
-        <div class="header">
-          <h1>وصلني</h1>
-          <p>فاتورة طلب</p>
-        </div>
-        
-          <p><strong>رقم الطلب:</strong> ${order.id
-            .slice(0, 8)
-            .toUpperCase()}</p>
-          <p><strong>التاريخ:</strong> ${(() => {
-            try {
-              return format(new Date(order.created_at), "dd/MM/yyyy - HH:mm");
-            } catch (e) {
-              return "N/A";
-            }
-          })()}</p>
-        </div>
-
-        <div class="store-info">
-          <h3>${order.stores?.name || "المتجر"}</h3>
-          ${order.stores?.address ? `<p>${order.stores.address}</p>` : ""}
-          ${order.stores?.phone ? `<p>هاتف: ${order.stores.phone}</p>` : ""}
-        </div>
-
-        <div class="address">
-          <strong>عنوان التوصيل:</strong><br>
-          ${order.delivery_address}
-          ${
-            order.notes
-              ? `<br><br><strong>ملاحظات:</strong> ${order.notes}`
-              : ""
-          }
-        </div>
-
-        <div class="items">
-          <strong>المنتجات:</strong>
-          ${order.order_items
-            ?.map(
-              (item: any) => `
-            <div class="item">
-              <span>${item.product_name} × ${item.quantity}</span>
-              <span>${(item.unit_price * item.quantity).toFixed(2)} ر.س</span>
-            </div>
-          `
-            )
-            .join("")}
-        </div>
-
-        <div class="totals">
-          <div class="row">
-            <span>المجموع الفرعي</span>
-            <span>${subtotal.toFixed(2)} ر.س</span>
-          </div>
-          <div class="row">
-            <span>رسوم التوصيل</span>
-            <span>${Number(order.delivery_fee).toFixed(2)} ر.س</span>
-          </div>
-          <div class="row total">
-            <span>المجموع الكلي</span>
-            <span>${Number(order.total_amount).toFixed(2)} ر.س</span>
-          </div>
-        </div>
-
-        <div class="footer">
-          <p>شكراً لاستخدامك وصلني</p>
-          <p>نتمنى لك تجربة سعيدة!</p>
-        </div>
-
-        <script>
-          window.onload = function() { window.print(); }
-        </script>
-      </body>
-      </html>
-    `;
-
-    printWindow.document.write(invoiceHtml);
-    printWindow.document.close();
+    toast.info("Print disabled in debug mode");
   };
 
   const downloadInvoicePDF = () => {
-    if (!order) return;
-
-    const doc = new jsPDF({
-      orientation: "portrait",
-      unit: "mm",
-      format: "a4",
-    });
-
-    const subtotal = Number(order.total_amount) - Number(order.delivery_fee);
-
-    // Header
-    doc.setFontSize(22);
-    doc.text("Waslni", 105, 20, { align: "center" });
-    doc.setFontSize(12);
-    doc.text("Order Invoice", 105, 28, { align: "center" });
-
-    // Line
-    doc.setLineWidth(0.5);
-    doc.line(20, 35, 190, 35);
-
-    // Order info
-    doc.setFontSize(11);
-    doc.text(`Order ID: ${order.id.slice(0, 8).toUpperCase()}`, 20, 45);
-    try {
-      doc.text(
-        `Date: ${format(new Date(order.created_at), "dd/MM/yyyy - HH:mm")}`,
-        20,
-        52
-      );
-    } catch (e) {
-      doc.text(`Date: N/A`, 20, 52);
-    }
-
-    // Store info
-    doc.setFontSize(12);
-    doc.text("Store Information:", 20, 65);
-    doc.setFontSize(10);
-    doc.text(`Name: ${order.stores?.name || "N/A"}`, 25, 72);
-    if (order.stores?.address)
-      doc.text(`Address: ${order.stores.address}`, 25, 79);
-    if (order.stores?.phone) doc.text(`Phone: ${order.stores.phone}`, 25, 86);
-
-    // Delivery info
-    doc.setFontSize(12);
-    doc.text("Delivery Information:", 20, 100);
-    doc.setFontSize(10);
-    doc.text(`Address: ${order.delivery_address}`, 25, 107);
-    if (order.notes) doc.text(`Notes: ${order.notes}`, 25, 114);
-
-    // Products table header
-    let yPos = order.notes ? 130 : 125;
-    doc.setFontSize(12);
-    doc.text("Products:", 20, yPos);
-    yPos += 8;
-
-    doc.setFillColor(240, 240, 240);
-    doc.rect(20, yPos - 5, 170, 8, "F");
-    doc.setFontSize(10);
-    doc.text("Product", 25, yPos);
-    doc.text("Qty", 120, yPos);
-    doc.text("Price", 145, yPos);
-    doc.text("Total", 170, yPos);
-    yPos += 8;
-
-    // Products
-    order.order_items?.forEach((item: any) => {
-      doc.text(item.product_name.substring(0, 35), 25, yPos);
-      doc.text(String(item.quantity), 120, yPos);
-      doc.text(`${item.unit_price} SAR`, 145, yPos);
-      doc.text(
-        `${(item.unit_price * item.quantity).toFixed(2)} SAR`,
-        170,
-        yPos
-      );
-      yPos += 7;
-    });
-
-    // Totals
-    yPos += 5;
-    doc.line(20, yPos, 190, yPos);
-    yPos += 8;
-    doc.text(`Subtotal: ${subtotal.toFixed(2)} SAR`, 145, yPos);
-    yPos += 7;
-    doc.text(
-      `Delivery Fee: ${Number(order.delivery_fee).toFixed(2)} SAR`,
-      145,
-      yPos
-    );
-    yPos += 7;
-    doc.setFontSize(12);
-    doc.text(`Total: ${Number(order.total_amount).toFixed(2)} SAR`, 145, yPos);
-
-    // Footer
-    yPos += 20;
-    doc.setFontSize(10);
-    doc.text("Thank you for using Waslni!", 105, yPos, { align: "center" });
-
-    doc.save(`invoice-${order.id.slice(0, 8).toUpperCase()}.pdf`);
-    toast.success("تم تحميل الفاتورة");
+    toast.info("PDF disabled in debug mode");
   };
 
   return (
@@ -507,66 +295,23 @@ export default function OrderTracking() {
                   رقم الطلب: {order.id.slice(0, 8).toUpperCase()}
                 </p>
               </div>
+              {/* Buttons simplified */}
               <div className="flex items-center gap-2">
                 <Button
                   variant="outline"
                   size="sm"
                   onClick={downloadInvoicePDF}
                 >
-                  <Download className="h-4 w-4 ml-1" />
-                  تحميل PDF
+                  Download PDF
                 </Button>
-                <Button variant="outline" size="sm" onClick={printInvoice}>
-                  <Printer className="h-4 w-4 ml-1" />
-                  طباعة
-                </Button>
-                {order.status === "cancelled" ? (
-                  <Badge variant="destructive" className="text-base px-4 py-1">
-                    <XCircle className="h-4 w-4 ml-1" />
-                    ملغي
-                  </Badge>
-                ) : canCancel ? (
-                  <AlertDialog>
-                    <AlertDialogTrigger asChild>
-                      <Button
-                        variant="destructive"
-                        size="sm"
-                        disabled={isCancelling}
-                      >
-                        {isCancelling ? (
-                          <Loader2 className="h-4 w-4 ml-1 animate-spin" />
-                        ) : (
-                          <XCircle className="h-4 w-4 ml-1" />
-                        )}
-                        إلغاء الطلب
-                      </Button>
-                    </AlertDialogTrigger>
-                    <AlertDialogContent dir="rtl">
-                      <AlertDialogHeader>
-                        <AlertDialogTitle>
-                          هل أنت متأكد من إلغاء الطلب؟
-                        </AlertDialogTitle>
-                        <AlertDialogDescription>
-                          سيتم إلغاء طلبك نهائياً ولا يمكن التراجع عن هذا
-                          الإجراء.
-                        </AlertDialogDescription>
-                      </AlertDialogHeader>
-                      <AlertDialogFooter className="gap-2">
-                        <AlertDialogCancel>تراجع</AlertDialogCancel>
-                        <AlertDialogAction
-                          onClick={handleCancelOrder}
-                          className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                        >
-                          نعم، إلغاء الطلب
-                        </AlertDialogAction>
-                      </AlertDialogFooter>
-                    </AlertDialogContent>
-                  </AlertDialog>
-                ) : null}
               </div>
             </div>
 
             {/* ETA Card - Show when driver is on the way */}
+            <div className="p-4 bg-yellow-50 border border-yellow-200 rounded text-center text-yellow-700 font-bold">
+              ⚠️ Debug Mode: Map & ETA Components Disabled to prevent crash.
+            </div>
+
             {/*
             <ETACard
               orderId={order.id}
@@ -587,10 +332,6 @@ export default function OrderTracking() {
               driverId={order.driver_id}
             />
             */}
-
-            <p className="text-center text-red-500 font-bold border p-2">
-              DEBUG MODE: MAP AND ETA DISABLED
-            </p>
 
             {/* Push Notifications */}
             <PushNotificationToggle />
@@ -704,7 +445,7 @@ export default function OrderTracking() {
               </Card>
             )}
 
-            {/* Driver Rating Card - Show only for delivered orders with a driver */}
+            {/* Driver Rating Card */}
             {order.status === "delivered" && order.driver_id && driverInfo && (
               <Card className="border-green-500/50 bg-green-500/5">
                 <CardHeader>
@@ -806,37 +547,39 @@ export default function OrderTracking() {
                 {order.notes && (
                   <>
                     <Separator />
-                    <div>
-                      <p className="font-medium mb-1">ملاحظات</p>
-                      <p className="text-muted-foreground">{order.notes}</p>
+                    <div className="flex items-start gap-3">
+                      <div className="font-medium min-w-[60px]">ملاحظات:</div>
+                      <div className="text-muted-foreground">{order.notes}</div>
                     </div>
                   </>
                 )}
+              </CardContent>
+            </Card>
 
-                <Separator />
-
-                <div>
-                  <p className="font-medium mb-2">المنتجات</p>
-                  <div className="space-y-2">
-                    {order.order_items?.map((item: any) => (
-                      <div
-                        key={item.id}
-                        className="flex justify-between text-sm"
-                      >
-                        <span>
-                          {item.product_name} × {item.quantity}
-                        </span>
-                        <span>
-                          {(item.unit_price * item.quantity).toFixed(2)} ر.س
-                        </span>
-                      </div>
-                    ))}
+            {/* Order Items */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-lg">المنتجات</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                {order.order_items?.map((item: any) => (
+                  <div
+                    key={item.id}
+                    className="flex justify-between items-center py-2 border-b last:border-0"
+                  >
+                    <div>
+                      <p className="font-medium">{item.product_name}</p>
+                      <p className="text-sm text-muted-foreground">
+                        الكمية: {item.quantity}
+                      </p>
+                    </div>
+                    <p className="font-medium">
+                      {(item.unit_price * item.quantity).toFixed(2)} ر.س
+                    </p>
                   </div>
-                </div>
+                ))}
 
-                <Separator />
-
-                <div className="space-y-1">
+                <div className="pt-4 space-y-2">
                   <div className="flex justify-between text-sm">
                     <span>المجموع الفرعي</span>
                     <span>
@@ -855,18 +598,28 @@ export default function OrderTracking() {
                     <span>{Number(order.total_amount).toFixed(2)} ر.س</span>
                   </div>
                 </div>
-
                 <div className="text-sm text-muted-foreground pt-2">
                   تاريخ الطلب:{" "}
-                  {format(new Date(order.created_at), "dd MMMM yyyy - HH:mm", {
-                    locale: ar,
-                  })}
+                  {(() => {
+                    try {
+                      return format(
+                        new Date(order.created_at),
+                        "dd MMMM yyyy - HH:mm",
+                        {
+                          locale: ar,
+                        }
+                      );
+                    } catch (e) {
+                      return "تاريخ غير متوفر";
+                    }
+                  })()}
                 </div>
               </CardContent>
             </Card>
           </div>
         )}
       </div>
+
       {/* Chat System Inline Debug */}
       {order.status !== "pending" && (
         <>
