@@ -9,6 +9,7 @@ import Auth from "./pages/Auth";
 import NotFound from "./pages/NotFound";
 import { AdminLayout } from "./components/admin/AdminLayout";
 import { StoreOwnerLayout } from "./components/store/StoreOwnerLayout";
+import { DriverLayout } from "./components/driver/DriverLayout";
 import Dashboard from "./pages/admin/Dashboard";
 import Stores from "./pages/admin/Stores";
 import Products from "./pages/admin/Products";
@@ -56,11 +57,13 @@ const App = () => (
               <Route path="/auth" element={<Auth />} />
 
               {/* Driver Routes */}
-              <Route path="/driver" element={<DriverDashboard />} />
-              <Route path="/driver/earnings" element={<DriverEarnings />} />
-              <Route path="/driver/history" element={<DriverHistory />} />
-              <Route path="/driver/ratings" element={<DriverRatings />} />
-              <Route path="/driver/settings" element={<DriverSettings />} />
+              <Route path="/driver" element={<DriverLayout />}>
+                <Route index element={<DriverDashboard />} />
+                <Route path="earnings" element={<DriverEarnings />} />
+                <Route path="history" element={<DriverHistory />} />
+                <Route path="ratings" element={<DriverRatings />} />
+                <Route path="settings" element={<DriverSettings />} />
+              </Route>
 
               {/* Admin Routes */}
               <Route path="/admin" element={<AdminLayout />}>
