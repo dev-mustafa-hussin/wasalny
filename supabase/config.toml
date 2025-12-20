@@ -1,0 +1,13 @@
+project_id = "ccfxqzavcgzhhdioykvi"
+
+[functions.send-order-notification]
+verify_jwt = false
+
+[functions.track-email-open]
+verify_jwt = false
+
+[functions.get-mapbox-token]
+verify_jwt = false
+
+[functions.notify-driver]
+verify_jwt = false
