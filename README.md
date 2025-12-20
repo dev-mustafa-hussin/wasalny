@@ -1,73 +1,98 @@
-# Welcome to your Lovable project
+# Wasalny 🚚
 
-## Project info
+**Wasalny** is a comprehensive delivery and logistics application designed to streamline order management, driver coordination, and customer deliveries. It leverages interactive maps and a modern real-time architecture to ensure efficient operations.
 
-**URL**: https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID
+[Live Demo](https://wasalny-six.vercel.app/)
 
-## How can I edit this code?
+## ✨ Features
 
-There are several ways of editing your application.
+- **User Authentication**: Secure sign-up and login for Admins, Merchants, and Drivers using Supabase Auth.
+- **Interactive Maps**: Real-time visualization of orders, stores, and driver locations powered by Mapbox GL.
+- **Order Management**: Complete lifecycle management of delivery orders from creation to completion.
+- **Role-Based Dashboards**: Tailored views and functionalities for different user roles.
+- **Modern UI/UX**: Built with Shadcn UI and Tailwind CSS for a sleek, responsive, and accessible interface.
+- **Dark Mode Support**: Seamless toggle between light and dark themes.
+- **PDF Export**: Generate invoices or reports directly from the application.
 
-**Use Lovable**
+## 🛠️ Tech Stack
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and start prompting.
+- **Frontend**: [React](https://react.dev/) with [Vite](https://vitejs.dev/)
+- **Language**: [TypeScript](https://www.typescriptlang.org/)
+- **Styling**: [Tailwind CSS](https://tailwindcss.com/)
+- **UI Components**: [Shadcn UI](https://ui.shadcn.com/)
+- **State Management**: [React Query](https://tanstack.com/query/latest) & React Context
+- **Routing**: [React Router](https://reactrouter.com/)
+- **Forms**: [React Hook Form](https://react-hook-form.com/) & [Zod](https://zod.dev/)
+- **Backend & Database**: [Supabase](https://supabase.com/)
+- **Maps**: [Mapbox GL JS](https://docs.mapbox.com/mapbox-gl-js/)
 
-Changes made via Lovable will be committed automatically to this repo.
+## 🚀 Getting Started
 
-**Use your preferred IDE**
+Follow these instructions to get a copy of the project up and running on your local machine.
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+### Prerequisites
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+- Node.js (v18 or higher recommended)
+- npm or yarn
 
-Follow these steps:
+### Installation
 
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
+1.  **Clone the repository**
 
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
+    ```bash
+    git clone https://github.com/dev-mustafa-hussin/build-your-app.git
+    cd build-your-app
+    ```
 
-# Step 3: Install the necessary dependencies.
-npm i
+2.  **Install dependencies**
 
-# Step 4: Start the development server with auto-reloading and an instant preview.
-npm run dev
+    ```bash
+    npm install
+    ```
+
+3.  **Environment Setup**
+    Create a `.env` file in the root directory and add your Supabase and Mapbox credentials:
+
+    ```env
+    VITE_SUPABASE_URL=your_supabase_url
+    VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
+    VITE_MAPBOX_TOKEN=your_mapbox_access_token
+    ```
+
+4.  **Run the development server**
+
+    ```bash
+    npm run dev
+    ```
+
+5.  **Build for production**
+    ```bash
+    npm run build
+    ```
+
+## 📂 Project Structure
+
+```
+src/
+├── components/   # Reusable UI components
+├── contexts/     # React Context providers
+├── hooks/        # Custom React hooks
+├── integrations/ # Third-party integrations (Supabase, OpenAI, etc.)
+├── lib/          # Utility functions and libraries
+├── pages/        # Application pages/routes
+└── App.tsx       # Main application component
 ```
 
-**Edit a file directly in GitHub**
+## 🤝 Contributing
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+Contributions are welcome! Please feel free to submit a Pull Request.
 
-**Use GitHub Codespaces**
+1.  Fork the project
+2.  Create your feature branch (`git checkout -b feature/AmazingFeature`)
+3.  Commit your changes (`git commit -m 'Add some AmazingFeature'`)
+4.  Push to the branch (`git push origin feature/AmazingFeature`)
+5.  Open a Pull Request
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+## 📄 License
 
-## What technologies are used for this project?
-
-This project is built with:
-
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
-
-## How can I deploy this project?
-
-Simply open [Lovable](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and click on Share -> Publish.
-
-## Can I connect a custom domain to my Lovable project?
-
-Yes, you can!
-
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
-
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/features/custom-domain#custom-domain)
+This project is licensed under the MIT License.
