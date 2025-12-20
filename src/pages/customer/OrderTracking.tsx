@@ -857,19 +857,23 @@ export default function OrderTracking() {
           </div>
         )}
       </div>
-      {/* Chat System */}
-      {order.status !== "pending" && driverInfo && (
-        <>
-          <ChatButton onClick={() => setIsChatOpen(true)} unreadCount={0} />
-          <ChatWindow
-            isOpen={isChatOpen}
-            onClose={() => setIsChatOpen(false)}
-            orderId={order.id}
-            currentUserId={user?.id || ""}
-            otherUserName={driverInfo.name || "المندوب"}
-          />
-        </>
-      )}
+      {/* Chat System - DIRECT DEBUGGING 
+            {order.status !== 'pending' && driverInfo && (
+              <>
+                <ChatButton 
+                  onClick={() => setIsChatOpen(true)} 
+                  unreadCount={0} 
+                />
+                <ChatWindow
+                  isOpen={isChatOpen}
+                  onClose={() => setIsChatOpen(false)}
+                  orderId={order.id}
+                  currentUserId={user?.id || ''}
+                  otherUserName={driverInfo.name || 'المندوب'}
+                />
+              </>
+            )}
+            */}
     </div>
   );
 }
