@@ -2,7 +2,7 @@ import * as React from "react";
 
 import { cn } from "@/lib/utils";
 
-// @ts-expect-error - Empty interface required by Radix UI
+// eslint-disable-next-line @typescript-eslint/no-empty-object-type
 export interface TextareaProps
   extends React.TextareaHTMLAttributes<HTMLTextAreaElement> {}
 
