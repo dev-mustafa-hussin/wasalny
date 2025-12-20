@@ -1,12 +1,8 @@
+import { Outlet } from "react-router-dom";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { StoreOwnerSidebar } from "./StoreOwnerSidebar";
-import { ModeToggle } from "@/components/mode-toggle";
 
-interface StoreOwnerLayoutProps {
-  children: React.ReactNode;
-}
-
-export function StoreOwnerLayout({ children }: StoreOwnerLayoutProps) {
+export function StoreOwnerLayout() {
   return (
     <SidebarProvider defaultOpen>
       <div className="min-h-screen flex w-full" dir="rtl">
@@ -18,10 +14,11 @@ export function StoreOwnerLayout({ children }: StoreOwnerLayoutProps) {
               <span className="text-sm text-foreground/60 hidden md:inline-block">
                 مرحباً بك في لوحة التاجر
               </span>
-              <ModeToggle />
             </div>
           </header>
-          <div className="p-6 animate-fade-in">{children}</div>
+          <div className="p-6 animate-fade-in">
+            <Outlet />
+          </div>
         </main>
       </div>
     </SidebarProvider>
