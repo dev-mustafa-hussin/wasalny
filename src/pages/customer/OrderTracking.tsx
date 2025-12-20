@@ -273,96 +273,133 @@ export default function OrderTracking() {
       <html dir="rtl" lang="ar">
       <head>
         <meta charset="UTF-8">
-        <title>فاتورة الطلب #${order.id.slice(0, 8).toUpperCase()}</title>
+        <title>فاتورة طلب #${order.id.slice(0, 8).toUpperCase()}</title>
         <style>
-          * { margin: 0; padding: 0; box-sizing: border-box; }
-          body { font-family: 'Segoe UI', Tahoma, sans-serif; padding: 20px; max-width: 400px; margin: 0 auto; }
-          .header { text-align: center; border-bottom: 2px dashed #333; padding-bottom: 15px; margin-bottom: 15px; }
-          .header h1 { font-size: 24px; margin-bottom: 5px; }
-          .header p { font-size: 12px; color: #666; }
-          .order-info { margin-bottom: 15px; font-size: 13px; }
-          .order-info p { margin: 5px 0; }
-          .store-info { background: #f5f5f5; padding: 10px; border-radius: 5px; margin-bottom: 15px; }
-          .store-info h3 { font-size: 14px; margin-bottom: 5px; }
-          .store-info p { font-size: 12px; color: #666; }
-          .items { border-top: 1px solid #ddd; border-bottom: 1px solid #ddd; padding: 10px 0; margin: 15px 0; }
-          .item { display: flex; justify-content: space-between; margin: 8px 0; font-size: 13px; }
-          .totals { margin-top: 15px; }
-          .totals .row { display: flex; justify-content: space-between; margin: 5px 0; font-size: 13px; }
-          .totals .total { font-weight: bold; font-size: 16px; border-top: 2px solid #333; padding-top: 10px; margin-top: 10px; }
-          .address { background: #f9f9f9; padding: 10px; border-radius: 5px; margin: 15px 0; font-size: 12px; }
-          .footer { text-align: center; margin-top: 20px; font-size: 12px; color: #666; border-top: 2px dashed #333; padding-top: 15px; }
-          @media print { body { padding: 10px; } }
+          @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap');
+          
+          body { font-family: 'Cairo', sans-serif; background: #f3f4f6; padding: 20px; }
+          .invoice-box {
+            max-width: 800px;
+            margin: auto;
+            background: #fff;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.15);
+          }
+          
+          .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 40px; border-bottom: 2px solid #eee; padding-bottom: 20px; }
+          .logo { font-size: 28px; font-weight: bold; color: #2563eb; }
+          .invoice-title { font-size: 24px; color: #333; }
+          
+          .info-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 30px; margin-bottom: 40px; }
+          .info-box h3 { margin: 0 0 10px; color: #666; font-size: 14px; }
+          .info-box p { margin: 0; font-weight: 600; color: #333; }
+          
+          table { width: 100%; border-collapse: collapse; margin-bottom: 30px; }
+          th { background: #f8fafc; color: #64748b; padding: 12px; text-align: right; font-weight: 600; }
+          td { padding: 12px; border-bottom: 1px solid #eee; color: #333; }
+          tr:last-child td { border-bottom: none; }
+          
+          .totals { margin-left: auto; width: 300px; }
+          .total-row { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #eee; }
+          .total-row.final { border-top: 2px solid #333; border-bottom: none; margin-top: 10px; padding-top: 10px; font-size: 18px; font-weight: bold; }
+          
+          .footer { text-align: center; margin-top: 50px; color: #9ca3af; font-size: 12px; }
+          
+          @media print {
+            body { background: #fff; padding: 0; }
+            .invoice-box { box-shadow: none; padding: 0; max-width: 100%; }
+          }
         </style>
       </head>
       <body>
-        <div class="header">
-          <h1>وصلني</h1>
-          <p>فاتورة طلب</p>
-        </div>
-        
-          <p><strong>رقم الطلب:</strong> ${order.id
-            .slice(0, 8)
-            .toUpperCase()}</p>
-          <p><strong>التاريخ:</strong> ${(() => {
-            try {
-              return format(new Date(order.created_at), "dd/MM/yyyy - HH:mm");
-            } catch (e) {
-              return "N/A";
-            }
-          })()}</p>
-        </div>
-
-        <div class="store-info">
-          <h3>${order.stores?.name || "المتجر"}</h3>
-          ${order.stores?.address ? `<p>${order.stores.address}</p>` : ""}
-          ${order.stores?.phone ? `<p>هاتف: ${order.stores.phone}</p>` : ""}
-        </div>
-
-        <div class="address">
-          <strong>عنوان التوصيل:</strong><br>
-          ${order.delivery_address}
-          ${
-            order.notes
-              ? `<br><br><strong>ملاحظات:</strong> ${order.notes}`
-              : ""
-          }
-        </div>
-
-        <div class="items">
-          <strong>المنتجات:</strong>
-          ${order.order_items
-            ?.map(
-              (item: any) => `
-            <div class="item">
-              <span>${item.product_name} × ${item.quantity}</span>
-              <span>${(item.unit_price * item.quantity).toFixed(2)} ر.س</span>
+        <div class="invoice-box">
+          <div class="header">
+            <div class="logo">وصلني</div>
+            <div class="invoice-title">فاتورة ضريبية</div>
+          </div>
+          
+          <div class="info-grid">
+            <div class="info-box">
+              <h3>بيانات الطلب</h3>
+              <p>رقم الطلب: #${order.id.slice(0, 8).toUpperCase()}</p>
+              <p>التاريخ: ${format(
+                new Date(order.created_at),
+                "dd/MM/yyyy - hh:mm a"
+              )}</p>
+              <p>حالة الطلب: ${
+                statusSteps.find((s) => s.key === order.status)?.label ||
+                order.status
+              }</p>
             </div>
-          `
-            )
-            .join("")}
-        </div>
-
-        <div class="totals">
-          <div class="row">
-            <span>المجموع الفرعي</span>
-            <span>${subtotal.toFixed(2)} ر.س</span>
+            <div class="info-box">
+              <h3>بيانات العميل</h3>
+              <p>${user?.user_metadata?.full_name || "عميل وصلني"}</p>
+              <p>${order.delivery_address}</p>
+              ${order.customer?.phone ? `<p>${order.customer.phone}</p>` : ""}
+            </div>
+            <div class="info-box">
+              <h3>بيانات المتجر</h3>
+              <p>${order.stores?.name}</p>
+              ${order.stores?.address ? `<p>${order.stores.address}</p>` : ""}
+              ${order.stores?.phone ? `<p>${order.stores.phone}</p>` : ""}
+            </div>
+            ${
+              order.notes
+                ? `
+            <div class="info-box">
+              <h3>ملاحظات</h3>
+              <p>${order.notes}</p>
+            </div>`
+                : ""
+            }
           </div>
-          <div class="row">
-            <span>رسوم التوصيل</span>
-            <span>${Number(order.delivery_fee).toFixed(2)} ر.س</span>
+          
+          <table>
+            <thead>
+              <tr>
+                <th>المنتج</th>
+                <th>الكمية</th>
+                <th>سعر الوحدة</th>
+                <th>الإجمالي</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${order.order_items
+                ?.map(
+                  (item: any) => `
+                <tr>
+                  <td>${item.product_name}</td>
+                  <td>${item.quantity}</td>
+                  <td>${item.unit_price} ر.س</td>
+                  <td>${(item.unit_price * item.quantity).toFixed(2)} ر.س</td>
+                </tr>
+              `
+                )
+                .join("")}
+            </tbody>
+          </table>
+          
+          <div class="totals">
+            <div class="total-row">
+              <span>المجموع الفرعي</span>
+              <span>${subtotal.toFixed(2)} ر.س</span>
+            </div>
+            <div class="total-row">
+              <span>رسوم التوصيل</span>
+              <span>${Number(order.delivery_fee).toFixed(2)} ر.س</span>
+            </div>
+            <div class="total-row final">
+              <span>الإجمالي الكلي</span>
+              <span>${Number(order.total_amount).toFixed(2)} ر.س</span>
+            </div>
           </div>
-          <div class="row total">
-            <span>المجموع الكلي</span>
-            <span>${Number(order.total_amount).toFixed(2)} ر.س</span>
+          
+          <div class="footer">
+            <p>شكراً لاستخدامكم تطبيق وصلني</p>
+            <p>رقم التسجيل الضريبي: 300123456789003</p>
           </div>
         </div>
-
-        <div class="footer">
-          <p>شكراً لاستخدامك وصلني</p>
-          <p>نتمنى لك تجربة سعيدة!</p>
-        </div>
-
         <script>
           window.onload = function() { window.print(); }
         </script>
