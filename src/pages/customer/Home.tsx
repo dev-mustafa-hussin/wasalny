@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Search, Utensils, ShoppingBag } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import { CustomerHeader } from "@/components/customer/CustomerHeader";
+
 import { StoreCard } from "@/components/customer/StoreCard";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
