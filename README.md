@@ -1,3 +1,5 @@
+![Wasalny Banner](public/social-preview.png)
+
 # Wasalny 🚚
 
 [![Frontend CI](https://github.com/dev-mustafa-hussin/build-your-app/actions/workflows/ci.yml/badge.svg)](https://github.com/dev-mustafa-hussin/build-your-app/actions/workflows/ci.yml)
