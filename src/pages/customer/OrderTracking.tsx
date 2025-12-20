@@ -567,6 +567,7 @@ export default function OrderTracking() {
             </div>
 
             {/* ETA Card - Show when driver is on the way */}
+            {/*
             <ETACard
               orderId={order.id}
               orderStatus={order.status}
@@ -574,8 +575,10 @@ export default function OrderTracking() {
               deliveryLng={order.delivery_lng}
               driverId={order.driver_id}
             />
+            */}
 
             {/* Live Map - Show when driver is on the way */}
+            {/*
             <CustomerOrderMap
               orderId={order.id}
               orderStatus={order.status}
@@ -583,6 +586,11 @@ export default function OrderTracking() {
               deliveryLng={order.delivery_lng}
               driverId={order.driver_id}
             />
+            */}
+
+            <p className="text-center text-red-500 font-bold border p-2">
+              DEBUG MODE: MAP AND ETA DISABLED
+            </p>
 
             {/* Push Notifications */}
             <PushNotificationToggle />
