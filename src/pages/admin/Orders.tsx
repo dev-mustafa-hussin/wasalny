@@ -1,12 +1,18 @@
-import { useEffect, useState } from 'react';
-import { supabase } from '@/integrations/supabase/client';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Badge } from '@/components/ui/badge';
-import { useToast } from '@/hooks/use-toast';
-import { ShoppingCart, MapPin, Clock, User } from 'lucide-react';
-import { format } from 'date-fns';
-import { ar } from 'date-fns/locale';
+import { useEffect, useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Badge } from "@/components/ui/badge";
+import { useToast } from "@/hooks/use-toast";
+import { ShoppingCart, MapPin, Clock, User } from "lucide-react";
+import { format } from "date-fns";
+import { ar } from "date-fns/locale";
 
 interface Order {
   id: string;
@@ -22,33 +28,64 @@ interface Order {
 }
 
 const statusOptions = [
-  { value: 'pending', label: 'معلق', color: 'bg-warning' },
-  { value: 'accepted', label: 'مقبول', color: 'bg-info' },
-  { value: 'preparing', label: 'قيد التحضير', color: 'bg-accent' },
-  { value: 'ready', label: 'جاهز', color: 'bg-primary' },
-  { value: 'picked_up', label: 'في الطريق', color: 'bg-info' },
-  { value: 'delivered', label: 'تم التوصيل', color: 'bg-success' },
-  { value: 'cancelled', label: 'ملغي', color: 'bg-destructive' },
+  { value: "pending", label: "معلق", color: "bg-warning" },
+  { value: "accepted", label: "مقبول", color: "bg-info" },
+  { value: "preparing", label: "قيد التحضير", color: "bg-accent" },
+  { value: "ready", label: "جاهز", color: "bg-primary" },
+  { value: "picked_up", label: "في الطريق", color: "bg-info" },
+  { value: "delivered", label: "تم التوصيل", color: "bg-success" },
+  { value: "cancelled", label: "ملغي", color: "bg-destructive" },
 ];
 
 export default function Orders() {
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
-  const [filterStatus, setFilterStatus] = useState<string>('all');
+  const [filterStatus, setFilterStatus] = useState<string>("all");
   const { toast } = useToast();
 
   useEffect(() => {
     fetchOrders();
+
+    // Subscribe to real-time updates
+    const channel = supabase
+      .channel("admin-orders")
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "orders" },
+        (payload) => {
+          if (payload.eventType === "INSERT") {
+            // We need to fetch the full order to get relations (stores)
+            fetchOrders();
+          } else if (payload.eventType === "UPDATE") {
+            setOrders((prev) =>
+              prev.map((order) =>
+                order.id === payload.new.id
+                  ? { ...order, ...payload.new }
+                  : order
+              )
+            );
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, []);
 
   const fetchOrders = async () => {
     const { data, error } = await supabase
-      .from('orders')
-      .select('*, stores(name)')
-      .order('created_at', { ascending: false });
+      .from("orders")
+      .select("*, stores(name)")
+      .order("created_at", { ascending: false });
 
     if (error) {
-      toast({ title: 'خطأ', description: 'فشل في تحميل الطلبات', variant: 'destructive' });
+      toast({
+        title: "خطأ",
+        description: "فشل في تحميل الطلبات",
+        variant: "destructive",
+      });
     } else {
       setOrders(data || []);
     }
@@ -56,34 +93,38 @@ export default function Orders() {
   };
 
   const updateOrderStatus = async (orderId: string, newStatus: string) => {
-    const orderToUpdate = orders.find(o => o.id === orderId);
-    
+    const orderToUpdate = orders.find((o) => o.id === orderId);
+
     const { error } = await supabase
-      .from('orders')
+      .from("orders")
       .update({ status: newStatus })
-      .eq('id', orderId);
+      .eq("id", orderId);
 
     if (error) {
-      toast({ title: 'خطأ', description: 'فشل في تحديث حالة الطلب', variant: 'destructive' });
+      toast({
+        title: "خطأ",
+        description: "فشل في تحديث حالة الطلب",
+        variant: "destructive",
+      });
     } else {
-      toast({ title: 'تم', description: 'تم تحديث حالة الطلب' });
-      
+      toast({ title: "تم", description: "تم تحديث حالة الطلب" });
+
       // Send email notification via edge function
       if (orderToUpdate?.customer_id) {
         try {
-          await supabase.functions.invoke('send-order-notification', {
+          await supabase.functions.invoke("send-order-notification", {
             body: {
               order_id: orderId,
               new_status: newStatus,
               customer_id: orderToUpdate.customer_id,
-              store_name: orderToUpdate.stores?.name || 'المتجر',
+              store_name: orderToUpdate.stores?.name || "المتجر",
             },
           });
         } catch (notificationError) {
-          console.error('Failed to send notification:', notificationError);
+          console.error("Failed to send notification:", notificationError);
         }
       }
-      
+
       fetchOrders();
     }
   };
@@ -92,9 +133,10 @@ export default function Orders() {
     return statusOptions.find((s) => s.value === status) || statusOptions[0];
   };
 
-  const filteredOrders = filterStatus === 'all' 
-    ? orders 
-    : orders.filter((o) => o.status === filterStatus);
+  const filteredOrders =
+    filterStatus === "all"
+      ? orders
+      : orders.filter((o) => o.status === filterStatus);
 
   return (
     <div className="space-y-6">
@@ -136,10 +178,16 @@ export default function Orders() {
                 <CardHeader className="pb-2">
                   <div className="flex items-start justify-between flex-wrap gap-2">
                     <div>
-                      <CardTitle className="text-lg">طلب #{order.id.slice(0, 8)}</CardTitle>
-                      <p className="text-sm text-muted-foreground">{order.stores?.name}</p>
+                      <CardTitle className="text-lg">
+                        طلب #{order.id.slice(0, 8)}
+                      </CardTitle>
+                      <p className="text-sm text-muted-foreground">
+                        {order.stores?.name}
+                      </p>
                     </div>
-                    <Badge className={statusInfo.color}>{statusInfo.label}</Badge>
+                    <Badge className={statusInfo.color}>
+                      {statusInfo.label}
+                    </Badge>
                   </div>
                 </CardHeader>
                 <CardContent className="space-y-3">
@@ -149,16 +197,19 @@ export default function Orders() {
                   </div>
                   <div className="flex items-center gap-2 text-sm text-muted-foreground">
                     <Clock className="h-4 w-4" />
-                    {format(new Date(order.created_at), 'PPp', { locale: ar })}
+                    {format(new Date(order.created_at), "PPp", { locale: ar })}
                   </div>
                   {order.notes && (
-                    <p className="text-sm bg-muted p-2 rounded">ملاحظات: {order.notes}</p>
+                    <p className="text-sm bg-muted p-2 rounded">
+                      ملاحظات: {order.notes}
+                    </p>
                   )}
                   <div className="flex items-center justify-between pt-2 border-t">
                     <div>
                       <p className="text-sm text-muted-foreground">المجموع</p>
                       <p className="font-bold text-lg">
-                        {(order.total_amount + order.delivery_fee).toFixed(2)} ر.س
+                        {(order.total_amount + order.delivery_fee).toFixed(2)}{" "}
+                        ر.س
                       </p>
                       <p className="text-xs text-muted-foreground">
                         (التوصيل: {order.delivery_fee} ر.س)

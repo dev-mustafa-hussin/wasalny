@@ -22,6 +22,7 @@ import Settings from "./pages/admin/Settings";
 import Reports from "./pages/admin/Reports";
 import EmailTemplates from "./pages/admin/EmailTemplates";
 import Approvals from "./pages/admin/Approvals";
+import Users from "./pages/admin/Users";
 // Customer pages
 import Home from "./pages/customer/Home";
 import StoreDetail from "./pages/customer/StoreDetail";
@@ -90,6 +91,7 @@ const App = () => (
                 <Route path="email-templates" element={<EmailTemplates />} />
                 <Route path="settings" element={<Settings />} />
                 <Route path="approvals" element={<Approvals />} />
+                <Route path="users" element={<Users />} />
               </Route>
 
               {/* Store Owner Routes */}
