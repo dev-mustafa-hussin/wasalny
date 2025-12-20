@@ -860,7 +860,7 @@ export default function OrderTracking() {
         )}
       </div>
       {/* Chat System Inline Debug */}
-      {order.status !== 'pending' && (
+      {order.status !== "pending" && (
         <>
           <button
             onClick={() => setIsChatOpen(true)}
@@ -868,7 +868,7 @@ export default function OrderTracking() {
           >
             <MessageSquare className="h-7 w-7" />
           </button>
-          
+
           {isChatOpen && (
             <div className="fixed bottom-4 left-4 w-[350px] h-[500px] bg-background border rounded-xl shadow-2xl flex flex-col z-50">
               <div className="p-4 border-b bg-primary text-primary-foreground rounded-t-xl flex justify-between items-center">
@@ -876,7 +876,9 @@ export default function OrderTracking() {
                 <button onClick={() => setIsChatOpen(false)}>X</button>
               </div>
               <div className="flex-1 p-4">
-                 <p className="text-center text-muted-foreground mt-10">نظام المحادثة سيعود قريباً...</p>
+                <p className="text-center text-muted-foreground mt-10">
+                  نظام المحادثة سيعود قريباً...
+                </p>
               </div>
             </div>
           )}
@@ -885,4 +887,3 @@ export default function OrderTracking() {
     </div>
   );
 }
-```
