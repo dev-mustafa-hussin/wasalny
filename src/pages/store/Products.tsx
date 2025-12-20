@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -210,13 +209,6 @@ export default function StoreProducts() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-=======
-export default function StoreProducts() {
-  return (
-    <div className="space-y-6">
-      <h2 className="text-3xl font-bold tracking-tight">منتجاتي</h2>
-      <p>قائمة المنتجات ستظهر هنا</p>
->>>>>>> c077acf5300567b2deaaa8886203e329e2cd588a
     </div>
   );
 }

@@ -23,7 +23,6 @@ export interface StoreOrder {
   items: OrderItem[];
   notes?: string;
 }
-<<<<<<< HEAD
 
 export interface StoreProduct {
   id: string;
@@ -35,5 +34,3 @@ export interface StoreProduct {
   is_available: boolean;
   created_at: string;
 }
-=======
->>>>>>> c077acf5300567b2deaaa8886203e329e2cd588a
