@@ -40,7 +40,7 @@ export function ChatWindow({
 
     const fetchRoom = async () => {
       // Find room for this order
-      // @ts-ignore
+      // @ts-expect-error - Supabase typing issue
       const { data: room, error } = await supabase
         .from("chat_rooms")
         .select("id")
@@ -66,7 +66,7 @@ export function ChatWindow({
   }, [isOpen, orderId]);
 
   const fetchMessages = async (rid: string) => {
-    // @ts-ignore
+    // @ts-expect-error - Supabase typing issue
     const { data } = await supabase
       .from("messages")
       .select("*")
@@ -79,7 +79,7 @@ export function ChatWindow({
 
   const subscribeToMessages = (rid: string) => {
     supabase
-      // @ts-ignore
+      // @ts-expect-error - Supabase typing issue
       .channel(`room:${rid}`)
       .on(
         "postgres_changes",
@@ -106,7 +106,7 @@ export function ChatWindow({
   const sendMessage = async () => {
     if (!newMessage.trim() || !roomId) return;
 
-    // @ts-ignore
+    // @ts-expect-error - Supabase typing issue
     const { error } = await supabase.from("messages").insert({
       room_id: roomId,
       sender_id: currentUserId,

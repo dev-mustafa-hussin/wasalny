@@ -15,6 +15,7 @@
 - **Interactive Maps**: Real-time visualization of orders, stores, and driver locations powered by Mapbox GL.
 - **Order Management**: Complete lifecycle management of delivery orders from creation to completion.
 - **Role-Based Dashboards**: Tailored views and functionalities for different user roles.
+- **Store Owner Dashboard**: Manage products, orders, and store settings.
 - **Modern UI/UX**: Built with Shadcn UI and Tailwind CSS for a sleek, responsive, and accessible interface.
 - **Dark Mode Support**: Seamless toggle between light and dark themes.
 - **PDF Export**: Generate invoices or reports directly from the application.

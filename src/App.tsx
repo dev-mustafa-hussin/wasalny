@@ -36,6 +36,15 @@ import DriverHistory from "./pages/driver/DriverHistory";
 import DriverSettings from "./pages/driver/DriverSettings";
 import DriverRatings from "./pages/driver/DriverRatings";
 
+// Store pages
+import StoreDashboard from "./pages/store/Dashboard";
+import StoreProducts from "./pages/store/Products";
+import StoreOrders from "./pages/store/Orders";
+import StoreSettings from "./pages/store/Settings";
+import StoreReports from "./pages/store/Reports";
+import StoreProfile from "./pages/store/Profile";
+import { RoleBasedRoute } from "./components/auth/RoleBasedRoute";
+
 const queryClient = new QueryClient();
 
 const App = () => (
@@ -83,12 +92,17 @@ const App = () => (
               </Route>
 
               {/* Store Owner Routes */}
-              <Route path="/store-owner" element={<StoreOwnerLayout />}>
-                <Route index element={<Dashboard />} />
-                <Route path="products" element={<Products />} />
-                <Route path="orders" element={<Orders />} />
-                <Route path="settings" element={<Settings />} />
-                <Route path="reports" element={<Reports />} />
+              <Route
+                element={<RoleBasedRoute allowedRoles={["store_owner"]} />}
+              >
+                <Route path="/store-owner" element={<StoreOwnerLayout />}>
+                  <Route index element={<StoreDashboard />} />
+                  <Route path="products" element={<StoreProducts />} />
+                  <Route path="orders" element={<StoreOrders />} />
+                  <Route path="settings" element={<StoreSettings />} />
+                  <Route path="reports" element={<StoreReports />} />
+                  <Route path="profile" element={<StoreProfile />} />
+                </Route>
               </Route>
 
               <Route path="*" element={<NotFound />} />
