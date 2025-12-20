@@ -43,6 +43,7 @@ import StoreOrders from "./pages/store/Orders";
 import StoreSettings from "./pages/store/Settings";
 import StoreReports from "./pages/store/Reports";
 import StoreProfile from "./pages/store/Profile";
+import { RoleBasedRoute } from "./components/auth/RoleBasedRoute";
 
 const queryClient = new QueryClient();
 
@@ -91,13 +92,17 @@ const App = () => (
               </Route>
 
               {/* Store Owner Routes */}
-              <Route path="/store-owner" element={<StoreOwnerLayout />}>
-                <Route index element={<StoreDashboard />} />
-                <Route path="products" element={<StoreProducts />} />
-                <Route path="orders" element={<StoreOrders />} />
-                <Route path="settings" element={<StoreSettings />} />
-                <Route path="reports" element={<StoreReports />} />
-                <Route path="profile" element={<StoreProfile />} />
+              <Route
+                element={<RoleBasedRoute allowedRoles={["store_owner"]} />}
+              >
+                <Route path="/store-owner" element={<StoreOwnerLayout />}>
+                  <Route index element={<StoreDashboard />} />
+                  <Route path="products" element={<StoreProducts />} />
+                  <Route path="orders" element={<StoreOrders />} />
+                  <Route path="settings" element={<StoreSettings />} />
+                  <Route path="reports" element={<StoreReports />} />
+                  <Route path="profile" element={<StoreProfile />} />
+                </Route>
               </Route>
 
               <Route path="*" element={<NotFound />} />
