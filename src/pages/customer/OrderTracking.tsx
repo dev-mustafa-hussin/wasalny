@@ -297,14 +297,16 @@ export default function OrderTracking() {
           <p>فاتورة طلب</p>
         </div>
         
-        <div class="order-info">
           <p><strong>رقم الطلب:</strong> ${order.id
             .slice(0, 8)
             .toUpperCase()}</p>
-          <p><strong>التاريخ:</strong> ${format(
-            new Date(order.created_at),
-            "dd/MM/yyyy - HH:mm"
-          )}</p>
+          <p><strong>التاريخ:</strong> ${(() => {
+            try {
+              return format(new Date(order.created_at), "dd/MM/yyyy - HH:mm");
+            } catch (e) {
+              return "N/A";
+            }
+          })()}</p>
         </div>
 
         <div class="store-info">
@@ -392,11 +394,15 @@ export default function OrderTracking() {
     // Order info
     doc.setFontSize(11);
     doc.text(`Order ID: ${order.id.slice(0, 8).toUpperCase()}`, 20, 45);
-    doc.text(
-      `Date: ${format(new Date(order.created_at), "dd/MM/yyyy - HH:mm")}`,
-      20,
-      52
-    );
+    try {
+      doc.text(
+        `Date: ${format(new Date(order.created_at), "dd/MM/yyyy - HH:mm")}`,
+        20,
+        52
+      );
+    } catch (e) {
+      doc.text(`Date: N/A`, 20, 52);
+    }
 
     // Store info
     doc.setFontSize(12);
@@ -852,7 +858,7 @@ export default function OrderTracking() {
         )}
       </div>
       {/* Chat System */}
-      {order.status !== "pending" && order.driver && (
+      {order.status !== "pending" && driverInfo && (
         <>
           <ChatButton onClick={() => setIsChatOpen(true)} unreadCount={0} />
           <ChatWindow
@@ -860,7 +866,7 @@ export default function OrderTracking() {
             onClose={() => setIsChatOpen(false)}
             orderId={order.id}
             currentUserId={user?.id || ""}
-            otherUserName={order.driver.full_name || "المندوب"}
+            otherUserName={driverInfo.name || "المندوب"}
           />
         </>
       )}
