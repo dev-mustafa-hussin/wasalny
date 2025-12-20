@@ -857,13 +857,17 @@ export default function OrderTracking() {
           </div>
         )}
       </div>
-      {/* Chat System - DIRECT DEBUGGING 
-            {order.status !== 'pending' && driverInfo && (
-              <>
-                <ChatButton 
-                  onClick={() => setIsChatOpen(true)} 
-                  unreadCount={0} 
-                />
+      {/* Chat System Debugging */}
+      {order.status !== "pending" && driverInfo && (
+        <>
+          <ChatButton onClick={() => setIsChatOpen(true)} unreadCount={0} />
+          {isChatOpen && (
+            <div className="fixed bottom-20 left-4 w-64 h-32 bg-white border p-4 shadow-xl z-50">
+              <p>Chat Window Debug Placeholder</p>
+              <button onClick={() => setIsChatOpen(false)}>Close</button>
+            </div>
+          )}
+          {/* 
                 <ChatWindow
                   isOpen={isChatOpen}
                   onClose={() => setIsChatOpen(false)}
@@ -871,9 +875,9 @@ export default function OrderTracking() {
                   currentUserId={user?.id || ''}
                   otherUserName={driverInfo.name || 'المندوب'}
                 />
-              </>
-            )}
-            */}
+                */}
+        </>
+      )}
     </div>
   );
 }
