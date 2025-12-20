@@ -16,11 +16,13 @@ import {
   Printer,
   Download,
   UserCheck,
+  Ban,
+  MessageSquare,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
-import { ChatWindow } from "@/components/chat/ChatWindow";
-import { ChatButton } from "@/components/chat/ChatButton";
+// import { ChatWindow } from "@/components/chat/ChatWindow";
+// import { ChatButton } from "@/components/chat/ChatButton";
 import { CustomerHeader } from "@/components/customer/CustomerHeader";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -857,27 +859,30 @@ export default function OrderTracking() {
           </div>
         )}
       </div>
-      {/* Chat System Debugging */}
-      {order.status !== "pending" && driverInfo && (
+      {/* Chat System Inline Debug */}
+      {order.status !== 'pending' && (
         <>
-          <ChatButton onClick={() => setIsChatOpen(true)} unreadCount={0} />
+          <button
+            onClick={() => setIsChatOpen(true)}
+            className="fixed bottom-4 left-4 h-14 w-14 rounded-full shadow-lg z-40 bg-primary text-white flex items-center justify-center hover:bg-primary/90"
+          >
+            <MessageSquare className="h-7 w-7" />
+          </button>
+          
           {isChatOpen && (
-            <div className="fixed bottom-20 left-4 w-64 h-32 bg-white border p-4 shadow-xl z-50">
-              <p>Chat Window Debug Placeholder</p>
-              <button onClick={() => setIsChatOpen(false)}>Close</button>
+            <div className="fixed bottom-4 left-4 w-[350px] h-[500px] bg-background border rounded-xl shadow-2xl flex flex-col z-50">
+              <div className="p-4 border-b bg-primary text-primary-foreground rounded-t-xl flex justify-between items-center">
+                <h3>المحادثة مع المندوب</h3>
+                <button onClick={() => setIsChatOpen(false)}>X</button>
+              </div>
+              <div className="flex-1 p-4">
+                 <p className="text-center text-muted-foreground mt-10">نظام المحادثة سيعود قريباً...</p>
+              </div>
             </div>
           )}
-          {/* 
-                <ChatWindow
-                  isOpen={isChatOpen}
-                  onClose={() => setIsChatOpen(false)}
-                  orderId={order.id}
-                  currentUserId={user?.id || ''}
-                  otherUserName={driverInfo.name || 'المندوب'}
-                />
-                */}
         </>
       )}
     </div>
   );
 }
+```
