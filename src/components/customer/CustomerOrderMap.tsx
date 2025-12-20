@@ -1,10 +1,10 @@
-import { useEffect, useRef, useState } from 'react';
-import mapboxgl from 'mapbox-gl';
-import 'mapbox-gl/dist/mapbox-gl.css';
-import { supabase } from '@/integrations/supabase/client';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Skeleton } from '@/components/ui/skeleton';
-import { MapPin, Navigation } from 'lucide-react';
+import { useEffect, useRef, useState } from "react";
+import mapboxgl from "mapbox-gl";
+import "mapbox-gl/dist/mapbox-gl.css";
+import { supabase } from "@/integrations/supabase/client";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Skeleton } from "@/components/ui/skeleton";
+import { MapPin, Navigation } from "lucide-react";
 
 interface CustomerOrderMapProps {
   orderId: string;
@@ -19,32 +19,56 @@ interface DriverLocation {
   current_lng: number | null;
 }
 
-export function CustomerOrderMap({ orderId, orderStatus, deliveryLat, deliveryLng, driverId }: CustomerOrderMapProps) {
+export function CustomerOrderMap({
+  orderId,
+  orderStatus,
+  deliveryLat,
+  deliveryLng,
+  driverId,
+}: CustomerOrderMapProps) {
   const mapContainer = useRef<HTMLDivElement>(null);
   const map = useRef<mapboxgl.Map | null>(null);
   const driverMarker = useRef<mapboxgl.Marker | null>(null);
   const deliveryMarker = useRef<mapboxgl.Marker | null>(null);
 
   const [mapboxToken, setMapboxToken] = useState<string | null>(null);
-  const [driverLocation, setDriverLocation] = useState<DriverLocation | null>(null);
+  const [driverLocation, setDriverLocation] = useState<DriverLocation | null>(
+    null
+  );
   const [isLoading, setIsLoading] = useState(true);
 
   // Only show map for out_for_delivery status
-  const showMap = orderStatus === 'out_for_delivery' && driverId && deliveryLat && deliveryLng;
+  const showMap =
+    orderStatus === "out_for_delivery" &&
+    driverId &&
+    deliveryLat &&
+    deliveryLng;
 
-  // Fetch Mapbox token
+  // Initialize Mapbox token
   useEffect(() => {
-    const fetchToken = async () => {
-      try {
-        const { data, error } = await supabase.functions.invoke('get-mapbox-token');
-        if (error) throw error;
-        setMapboxToken(data.token);
-      } catch (err) {
-        console.error('Error fetching Mapbox token:', err);
+    // Priority: 1. Environment Variable, 2. Hardcoded (Fallback), 3. Edge Function
+    const token =
+      import.meta.env.VITE_MAPBOX_TOKEN ||
+      "pk.eyJ1IjoiM21jb2Rlc29mdHdhcmVzb2x1dGlvbnMiLCJhIjoiY21lenkyb3U2MTRqZDJxczd3MHp2MzVxMiJ9.2EgCJBrDrL0eD6U3aBzCPw";
+
+    if (token) {
+      setMapboxToken(token);
+    } else {
+      // Fallback to fetching from backend if no token found locally
+      const fetchToken = async () => {
+        try {
+          const { data, error } = await supabase.functions.invoke(
+            "get-mapbox-token"
+          );
+          if (error) throw error;
+          setMapboxToken(data.token);
+        } catch (err) {
+          console.error("Error fetching Mapbox token:", err);
+        }
+      };
+      if (showMap) {
+        fetchToken();
       }
-    };
-    if (showMap) {
-      fetchToken();
     }
   }, [showMap]);
 
@@ -54,9 +78,9 @@ export function CustomerOrderMap({ orderId, orderStatus, deliveryLat, deliveryLn
 
     const fetchDriverLocation = async () => {
       const { data, error } = await supabase
-        .from('drivers')
-        .select('current_lat, current_lng')
-        .eq('id', driverId)
+        .from("drivers")
+        .select("current_lat, current_lng")
+        .eq("id", driverId)
         .single();
 
       if (!error && data) {
@@ -70,18 +94,18 @@ export function CustomerOrderMap({ orderId, orderStatus, deliveryLat, deliveryLn
     const channel = supabase
       .channel(`driver-map-${driverId}`)
       .on(
-        'postgres_changes',
+        "postgres_changes",
         {
-          event: 'UPDATE',
-          schema: 'public',
-          table: 'drivers',
+          event: "UPDATE",
+          schema: "public",
+          table: "drivers",
           filter: `id=eq.${driverId}`,
         },
         (payload) => {
           const newLocation = payload.new as DriverLocation;
           setDriverLocation({
             current_lat: newLocation.current_lat,
-            current_lng: newLocation.current_lng
+            current_lng: newLocation.current_lng,
           });
         }
       )
@@ -103,17 +127,17 @@ export function CustomerOrderMap({ orderId, orderStatus, deliveryLat, deliveryLn
 
     map.current = new mapboxgl.Map({
       container: mapContainer.current,
-      style: 'mapbox://styles/mapbox/streets-v12',
+      style: "mapbox://styles/mapbox/streets-v12",
       center: [centerLng, centerLat],
       zoom: 14,
-      attributionControl: false
+      attributionControl: false,
     });
 
-    map.current.addControl(new mapboxgl.NavigationControl(), 'top-left');
+    map.current.addControl(new mapboxgl.NavigationControl(), "top-left");
 
     // Add delivery marker
     if (deliveryLat && deliveryLng) {
-      const deliveryEl = document.createElement('div');
+      const deliveryEl = document.createElement("div");
       deliveryEl.innerHTML = `
         <div style="
           background: hsl(var(--primary));
@@ -135,7 +159,11 @@ export function CustomerOrderMap({ orderId, orderStatus, deliveryLat, deliveryLn
 
       deliveryMarker.current = new mapboxgl.Marker({ element: deliveryEl })
         .setLngLat([deliveryLng, deliveryLat])
-        .setPopup(new mapboxgl.Popup({ offset: 25 }).setHTML('<div style="padding: 8px; font-weight: bold;">موقع التوصيل</div>'))
+        .setPopup(
+          new mapboxgl.Popup({ offset: 25 }).setHTML(
+            '<div style="padding: 8px; font-weight: bold;">موقع التوصيل</div>'
+          )
+        )
         .addTo(map.current);
     }
 
@@ -146,12 +174,20 @@ export function CustomerOrderMap({ orderId, orderStatus, deliveryLat, deliveryLn
 
   // Update driver marker
   useEffect(() => {
-    if (!map.current || !driverLocation?.current_lat || !driverLocation?.current_lng) return;
+    if (
+      !map.current ||
+      !driverLocation?.current_lat ||
+      !driverLocation?.current_lng
+    )
+      return;
 
     if (driverMarker.current) {
-      driverMarker.current.setLngLat([driverLocation.current_lng, driverLocation.current_lat]);
+      driverMarker.current.setLngLat([
+        driverLocation.current_lng,
+        driverLocation.current_lat,
+      ]);
     } else {
-      const driverEl = document.createElement('div');
+      const driverEl = document.createElement("div");
       driverEl.innerHTML = `
         <div style="
           background: #22c55e;
@@ -180,7 +216,11 @@ export function CustomerOrderMap({ orderId, orderStatus, deliveryLat, deliveryLn
 
       driverMarker.current = new mapboxgl.Marker({ element: driverEl })
         .setLngLat([driverLocation.current_lng, driverLocation.current_lat])
-        .setPopup(new mapboxgl.Popup({ offset: 25 }).setHTML('<div style="padding: 8px; font-weight: bold;">موقع المندوب</div>'))
+        .setPopup(
+          new mapboxgl.Popup({ offset: 25 }).setHTML(
+            '<div style="padding: 8px; font-weight: bold;">موقع المندوب</div>'
+          )
+        )
         .addTo(map.current);
     }
 
@@ -204,7 +244,12 @@ export function CustomerOrderMap({ orderId, orderStatus, deliveryLat, deliveryLn
     }
   }, [driverLocation, deliveryLat, deliveryLng, mapboxToken]);
 
-  const drawRoute = async (startLng: number, startLat: number, endLng: number, endLat: number) => {
+  const drawRoute = async (
+    startLng: number,
+    startLat: number,
+    endLng: number,
+    endLat: number
+  ) => {
     if (!map.current || !mapboxToken) return;
 
     try {
@@ -219,40 +264,40 @@ export function CustomerOrderMap({ orderId, orderStatus, deliveryLat, deliveryLn
       if (data.routes && data.routes.length > 0) {
         const route = data.routes[0].geometry;
 
-        if (map.current.getSource('route')) {
-          (map.current.getSource('route') as mapboxgl.GeoJSONSource).setData({
-            type: 'Feature',
+        if (map.current.getSource("route")) {
+          (map.current.getSource("route") as mapboxgl.GeoJSONSource).setData({
+            type: "Feature",
             properties: {},
-            geometry: route
+            geometry: route,
           });
         } else {
-          map.current.addSource('route', {
-            type: 'geojson',
+          map.current.addSource("route", {
+            type: "geojson",
             data: {
-              type: 'Feature',
+              type: "Feature",
               properties: {},
-              geometry: route
-            }
+              geometry: route,
+            },
           });
 
           map.current.addLayer({
-            id: 'route',
-            type: 'line',
-            source: 'route',
+            id: "route",
+            type: "line",
+            source: "route",
             layout: {
-              'line-join': 'round',
-              'line-cap': 'round'
+              "line-join": "round",
+              "line-cap": "round",
             },
             paint: {
-              'line-color': '#22c55e',
-              'line-width': 5,
-              'line-opacity': 0.8
-            }
+              "line-color": "#22c55e",
+              "line-width": 5,
+              "line-opacity": 0.8,
+            },
           });
         }
       }
     } catch (err) {
-      console.error('Error drawing route:', err);
+      console.error("Error drawing route:", err);
     }
   };
 
@@ -279,7 +324,7 @@ export function CustomerOrderMap({ orderId, orderStatus, deliveryLat, deliveryLn
         ) : (
           <div ref={mapContainer} className="h-[300px] w-full rounded-b-lg" />
         )}
-        
+
         {/* Legend */}
         <div className="p-3 border-t flex items-center justify-center gap-6 text-sm">
           <div className="flex items-center gap-2">

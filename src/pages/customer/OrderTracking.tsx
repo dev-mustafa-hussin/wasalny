@@ -31,6 +31,7 @@ import { ETACard } from "@/components/customer/ETACard";
 import { CustomerOrderMap } from "@/components/customer/CustomerOrderMap";
 import { PushNotificationToggle } from "@/components/customer/PushNotificationToggle";
 import { DriverRatingDialog } from "@/components/customer/DriverRatingDialog";
+import { DriverInfoCard } from "@/components/customer/DriverInfoCard";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -132,14 +133,15 @@ export default function OrderTracking() {
     enabled: !!id && !!order?.driver_id && order?.status === "delivered",
   });
 
-  // Fetch driver info for rating dialog
+  // Fetch driver info
   const { data: driverInfo } = useQuery({
     queryKey: ["driver-info", order?.driver_id],
     queryFn: async () => {
       if (!order?.driver_id) return null;
+
       const { data: driver } = await supabase
         .from("drivers")
-        .select("id, user_id")
+        .select("id, user_id, vehicle_type, vehicle_number")
         .eq("id", order.driver_id)
         .maybeSingle();
 
@@ -147,11 +149,17 @@ export default function OrderTracking() {
 
       const { data: profile } = await supabase
         .from("profiles")
-        .select("full_name")
+        .select("full_name, phone")
         .eq("user_id", driver.user_id)
         .maybeSingle();
 
-      return { id: driver.id, name: profile?.full_name };
+      return {
+        id: driver.id,
+        name: profile?.full_name,
+        phone: profile?.phone,
+        vehicleType: driver.vehicle_type,
+        vehicleNumber: driver.vehicle_number,
+      };
     },
     enabled: !!order?.driver_id,
   });
@@ -568,6 +576,16 @@ export default function OrderTracking() {
               deliveryLng={order.delivery_lng}
               driverId={order.driver_id}
             />
+
+            {/* Driver Info - Show when driver is assigned */}
+            {driverInfo && (
+              <DriverInfoCard
+                driverName={driverInfo.name || "مندوب وصلني"}
+                driverPhone={driverInfo.phone}
+                vehicleType={driverInfo.vehicleType}
+                vehicleNumber={driverInfo.vehicleNumber}
+              />
+            )}
 
             {/* Live Map - Show when driver is on the way */}
             <CustomerOrderMap
