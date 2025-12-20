@@ -8,6 +8,7 @@ import { CartProvider } from "@/contexts/CartContext";
 import Auth from "./pages/Auth";
 import NotFound from "./pages/NotFound";
 import { AdminLayout } from "./components/admin/AdminLayout";
+import { StoreOwnerLayout } from "./components/store/StoreOwnerLayout";
 import Dashboard from "./pages/admin/Dashboard";
 import Stores from "./pages/admin/Stores";
 import Products from "./pages/admin/Products";
@@ -73,6 +74,15 @@ const App = () => (
                 <Route path="email-templates" element={<EmailTemplates />} />
                 <Route path="settings" element={<Settings />} />
                 <Route path="approvals" element={<Approvals />} />
+              </Route>
+
+              {/* Store Owner Routes */}
+              <Route path="/store-owner" element={<StoreOwnerLayout />}>
+                <Route index element={<Dashboard />} />
+                <Route path="products" element={<Products />} />
+                <Route path="orders" element={<Orders />} />
+                <Route path="settings" element={<Settings />} />
+                <Route path="reports" element={<Reports />} />
               </Route>
 
               <Route path="*" element={<NotFound />} />
