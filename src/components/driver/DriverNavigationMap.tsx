@@ -1,18 +1,18 @@
-import { useEffect, useRef, useState, useCallback } from 'react';
-import mapboxgl from 'mapbox-gl';
-import 'mapbox-gl/dist/mapbox-gl.css';
-import { supabase } from '@/integrations/supabase/client';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Skeleton } from '@/components/ui/skeleton';
-import { 
-  MapPin, 
-  Navigation, 
-  Locate, 
-  Clock, 
+import { useEffect, useRef, useState, useCallback } from "react";
+import mapboxgl from "mapbox-gl";
+import "mapbox-gl/dist/mapbox-gl.css";
+import { supabase } from "@/integrations/supabase/client";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
+import {
+  MapPin,
+  Navigation,
+  Locate,
+  Clock,
   Route as RouteIcon,
-  ExternalLink
-} from 'lucide-react';
+  ExternalLink,
+} from "lucide-react";
 
 interface DriverNavigationMapProps {
   deliveryLat: number;
@@ -30,15 +30,15 @@ interface RouteInfo {
   duration: number; // in seconds
 }
 
-export function DriverNavigationMap({ 
-  deliveryLat, 
-  deliveryLng, 
+export function DriverNavigationMap({
+  deliveryLat,
+  deliveryLng,
   deliveryAddress,
   storeLat,
   storeLng,
   storeName,
   storeAddress,
-  showStore = false
+  showStore = false,
 }: DriverNavigationMapProps) {
   const mapContainer = useRef<HTMLDivElement>(null);
   const map = useRef<mapboxgl.Map | null>(null);
@@ -47,23 +47,38 @@ export function DriverNavigationMap({
   const storeMarker = useRef<mapboxgl.Marker | null>(null);
 
   const [mapboxToken, setMapboxToken] = useState<string | null>(null);
-  const [currentLocation, setCurrentLocation] = useState<{ lat: number; lng: number } | null>(null);
+  const [currentLocation, setCurrentLocation] = useState<{
+    lat: number;
+    lng: number;
+  } | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [routeInfo, setRouteInfo] = useState<RouteInfo | null>(null);
   const [watchId, setWatchId] = useState<number | null>(null);
 
-  // Fetch Mapbox token
+  // Initialize Mapbox token
   useEffect(() => {
-    const fetchToken = async () => {
-      try {
-        const { data, error } = await supabase.functions.invoke('get-mapbox-token');
-        if (error) throw error;
-        setMapboxToken(data.token);
-      } catch (err) {
-        console.error('Error fetching Mapbox token:', err);
-      }
-    };
-    fetchToken();
+    // Priority: 1. Environment Variable, 2. Hardcoded (Fallback), 3. Edge Function
+    const token =
+      import.meta.env.VITE_MAPBOX_TOKEN ||
+      "pk.eyJ1IjoiM21jb2Rlc29mdHdhcmVzb2x1dGlvbnMiLCJhIjoiY21lenkyb3U2MTRqZDJxczd3MHp2MzVxMiJ9.2EgCJBrDrL0eD6U3aBzCPw";
+
+    if (token) {
+      setMapboxToken(token);
+    } else {
+      // Fallback to fetching from backend if no token found locally
+      const fetchToken = async () => {
+        try {
+          const { data, error } = await supabase.functions.invoke(
+            "get-mapbox-token"
+          );
+          if (error) throw error;
+          setMapboxToken(data.token);
+        } catch (err) {
+          console.error("Error fetching Mapbox token:", err);
+        }
+      };
+      fetchToken();
+    }
   }, []);
 
   // Start watching location
@@ -77,18 +92,18 @@ export function DriverNavigationMap({
       (position) => {
         setCurrentLocation({
           lat: position.coords.latitude,
-          lng: position.coords.longitude
+          lng: position.coords.longitude,
         });
         setIsLoading(false);
       },
       (err) => {
-        console.error('Geolocation error:', err);
+        console.error("Geolocation error:", err);
         setIsLoading(false);
       },
       {
         enableHighAccuracy: true,
         timeout: 10000,
-        maximumAge: 5000
+        maximumAge: 5000,
       }
     );
 
@@ -112,16 +127,16 @@ export function DriverNavigationMap({
 
     map.current = new mapboxgl.Map({
       container: mapContainer.current,
-      style: 'mapbox://styles/mapbox/navigation-night-v1',
+      style: "mapbox://styles/mapbox/navigation-night-v1",
       center: [centerLng, centerLat],
       zoom: 14,
-      attributionControl: false
+      attributionControl: false,
     });
 
-    map.current.addControl(new mapboxgl.NavigationControl(), 'top-left');
+    map.current.addControl(new mapboxgl.NavigationControl(), "top-left");
 
     // Add delivery marker
-    const deliveryEl = document.createElement('div');
+    const deliveryEl = document.createElement("div");
     deliveryEl.innerHTML = `
       <div style="
         background: #ef4444;
@@ -143,17 +158,19 @@ export function DriverNavigationMap({
 
     deliveryMarker.current = new mapboxgl.Marker({ element: deliveryEl })
       .setLngLat([deliveryLng, deliveryLat])
-      .setPopup(new mapboxgl.Popup({ offset: 25 }).setHTML(`
+      .setPopup(
+        new mapboxgl.Popup({ offset: 25 }).setHTML(`
         <div style="padding: 8px; direction: rtl;">
           <div style="font-weight: bold; margin-bottom: 4px;">موقع التوصيل</div>
           <div style="font-size: 12px; color: #666;">${deliveryAddress}</div>
         </div>
-      `))
+      `)
+      )
       .addTo(map.current);
 
     // Add store marker if needed
     if (showStore && storeLat && storeLng) {
-      const storeEl = document.createElement('div');
+      const storeEl = document.createElement("div");
       storeEl.innerHTML = `
         <div style="
           background: #f59e0b;
@@ -177,12 +194,18 @@ export function DriverNavigationMap({
 
       storeMarker.current = new mapboxgl.Marker({ element: storeEl })
         .setLngLat([storeLng, storeLat])
-        .setPopup(new mapboxgl.Popup({ offset: 25 }).setHTML(`
+        .setPopup(
+          new mapboxgl.Popup({ offset: 25 }).setHTML(`
           <div style="padding: 8px; direction: rtl;">
-            <div style="font-weight: bold; margin-bottom: 4px;">${storeName || 'المتجر'}</div>
-            <div style="font-size: 12px; color: #666;">${storeAddress || ''}</div>
+            <div style="font-weight: bold; margin-bottom: 4px;">${
+              storeName || "المتجر"
+            }</div>
+            <div style="font-size: 12px; color: #666;">${
+              storeAddress || ""
+            }</div>
           </div>
-        `))
+        `)
+        )
         .addTo(map.current);
     }
 
@@ -196,9 +219,12 @@ export function DriverNavigationMap({
     if (!map.current || !currentLocation) return;
 
     if (driverMarker.current) {
-      driverMarker.current.setLngLat([currentLocation.lng, currentLocation.lat]);
+      driverMarker.current.setLngLat([
+        currentLocation.lng,
+        currentLocation.lat,
+      ]);
     } else {
-      const driverEl = document.createElement('div');
+      const driverEl = document.createElement("div");
       driverEl.innerHTML = `
         <div style="
           background: #22c55e;
@@ -227,12 +253,21 @@ export function DriverNavigationMap({
 
       driverMarker.current = new mapboxgl.Marker({ element: driverEl })
         .setLngLat([currentLocation.lng, currentLocation.lat])
-        .setPopup(new mapboxgl.Popup({ offset: 25 }).setHTML('<div style="padding: 8px; font-weight: bold; direction: rtl;">موقعك الحالي</div>'))
+        .setPopup(
+          new mapboxgl.Popup({ offset: 25 }).setHTML(
+            '<div style="padding: 8px; font-weight: bold; direction: rtl;">موقعك الحالي</div>'
+          )
+        )
         .addTo(map.current);
     }
 
     // Draw route and get info
-    drawRoute(currentLocation.lng, currentLocation.lat, deliveryLng, deliveryLat);
+    drawRoute(
+      currentLocation.lng,
+      currentLocation.lat,
+      deliveryLng,
+      deliveryLat
+    );
 
     // Fit bounds
     const bounds = new mapboxgl.LngLatBounds()
@@ -244,91 +279,106 @@ export function DriverNavigationMap({
     }
 
     map.current.fitBounds(bounds, { padding: 80 });
-  }, [currentLocation, deliveryLat, deliveryLng, storeLat, storeLng, showStore]);
+  }, [
+    currentLocation,
+    deliveryLat,
+    deliveryLng,
+    storeLat,
+    storeLng,
+    showStore,
+  ]);
 
-  const drawRoute = useCallback(async (startLng: number, startLat: number, endLng: number, endLat: number) => {
-    if (!map.current || !mapboxToken) return;
+  const drawRoute = useCallback(
+    async (
+      startLng: number,
+      startLat: number,
+      endLng: number,
+      endLat: number
+    ) => {
+      if (!map.current || !mapboxToken) return;
 
-    try {
-      const response = await fetch(
-        `https://api.mapbox.com/directions/v5/mapbox/driving/${startLng},${startLat};${endLng},${endLat}?geometries=geojson&overview=full&access_token=${mapboxToken}`
-      );
+      try {
+        const response = await fetch(
+          `https://api.mapbox.com/directions/v5/mapbox/driving/${startLng},${startLat};${endLng},${endLat}?geometries=geojson&overview=full&access_token=${mapboxToken}`
+        );
 
-      if (!response.ok) return;
+        if (!response.ok) return;
 
-      const data = await response.json();
+        const data = await response.json();
 
-      if (data.routes && data.routes.length > 0) {
-        const route = data.routes[0];
-        
-        // Update route info
-        setRouteInfo({
-          distance: route.distance,
-          duration: route.duration
-        });
+        if (data.routes && data.routes.length > 0) {
+          const route = data.routes[0];
 
-        const geometry = route.geometry;
-
-        if (map.current.getSource('route')) {
-          (map.current.getSource('route') as mapboxgl.GeoJSONSource).setData({
-            type: 'Feature',
-            properties: {},
-            geometry: geometry
+          // Update route info
+          setRouteInfo({
+            distance: route.distance,
+            duration: route.duration,
           });
-        } else {
-          map.current.addSource('route', {
-            type: 'geojson',
-            data: {
-              type: 'Feature',
+
+          const geometry = route.geometry;
+
+          if (map.current.getSource("route")) {
+            (map.current.getSource("route") as mapboxgl.GeoJSONSource).setData({
+              type: "Feature",
               properties: {},
-              geometry: geometry
-            }
-          });
+              geometry: geometry,
+            });
+          } else {
+            map.current.addSource("route", {
+              type: "geojson",
+              data: {
+                type: "Feature",
+                properties: {},
+                geometry: geometry,
+              },
+            });
 
-          // Add glow effect
-          map.current.addLayer({
-            id: 'route-glow',
-            type: 'line',
-            source: 'route',
-            layout: {
-              'line-join': 'round',
-              'line-cap': 'round'
-            },
-            paint: {
-              'line-color': '#22c55e',
-              'line-width': 12,
-              'line-opacity': 0.3,
-              'line-blur': 3
-            }
-          });
+            // Add glow effect
+            map.current.addLayer({
+              id: "route-glow",
+              type: "line",
+              source: "route",
+              layout: {
+                "line-join": "round",
+                "line-cap": "round",
+              },
+              paint: {
+                "line-color": "#22c55e",
+                "line-width": 12,
+                "line-opacity": 0.3,
+                "line-blur": 3,
+              },
+            });
 
-          map.current.addLayer({
-            id: 'route',
-            type: 'line',
-            source: 'route',
-            layout: {
-              'line-join': 'round',
-              'line-cap': 'round'
-            },
-            paint: {
-              'line-color': '#22c55e',
-              'line-width': 5,
-              'line-opacity': 0.9
-            }
-          });
+            map.current.addLayer({
+              id: "route",
+              type: "line",
+              source: "route",
+              layout: {
+                "line-join": "round",
+                "line-cap": "round",
+              },
+              paint: {
+                "line-color": "#22c55e",
+                "line-width": 5,
+                "line-opacity": 0.9,
+              },
+            });
+          }
         }
+      } catch (err) {
+        console.error("Error drawing route:", err);
       }
-    } catch (err) {
-      console.error('Error drawing route:', err);
-    }
-  }, [mapboxToken]);
+    },
+    [mapboxToken]
+  );
 
   const centerOnLocation = () => {
     if (map.current && currentLocation) {
       map.current.flyTo({
         center: [currentLocation.lng, currentLocation.lat],
         zoom: 16,
-        duration: 1000
+        duration: 1000,
       });
     }
   };
@@ -336,7 +386,7 @@ export function DriverNavigationMap({
   const openExternalNavigation = () => {
     // Open in Google Maps or native navigation
     const url = `https://www.google.com/maps/dir/?api=1&destination=${deliveryLat},${deliveryLng}&travelmode=driving`;
-    window.open(url, '_blank');
+    window.open(url, "_blank");
   };
 
   const formatDistance = (meters: number) => {
@@ -365,17 +415,17 @@ export function DriverNavigationMap({
             خريطة الملاحة
           </CardTitle>
           <div className="flex gap-2">
-            <Button 
-              variant="outline" 
-              size="icon" 
+            <Button
+              variant="outline"
+              size="icon"
               className="h-8 w-8"
               onClick={centerOnLocation}
               disabled={!currentLocation}
             >
               <Locate className="h-4 w-4" />
             </Button>
-            <Button 
-              variant="default" 
+            <Button
+              variant="default"
               size="sm"
               onClick={openExternalNavigation}
               className="gap-1"
@@ -386,19 +436,23 @@ export function DriverNavigationMap({
           </div>
         </div>
       </CardHeader>
-      
+
       <CardContent className="p-0">
         {/* Route Info */}
         {routeInfo && (
           <div className="px-4 py-2 bg-muted/50 border-y border-border flex items-center justify-around">
             <div className="flex items-center gap-2 text-sm">
               <RouteIcon className="h-4 w-4 text-primary" />
-              <span className="font-medium">{formatDistance(routeInfo.distance)}</span>
+              <span className="font-medium">
+                {formatDistance(routeInfo.distance)}
+              </span>
             </div>
             <div className="h-4 w-px bg-border" />
             <div className="flex items-center gap-2 text-sm">
               <Clock className="h-4 w-4 text-primary" />
-              <span className="font-medium">{formatDuration(routeInfo.duration)}</span>
+              <span className="font-medium">
+                {formatDuration(routeInfo.duration)}
+              </span>
             </div>
           </div>
         )}
@@ -417,7 +471,7 @@ export function DriverNavigationMap({
         ) : (
           <div ref={mapContainer} className="h-[350px] w-full" />
         )}
-        
+
         {/* Legend */}
         <div className="p-3 border-t flex items-center justify-center gap-6 text-sm">
           <div className="flex items-center gap-2">
