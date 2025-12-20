@@ -45,6 +45,31 @@ async function acceptAndDeliver() {
     
     console.log('✅ Order Accepted & Out for Delivery!');
 
+    // --- CHAT SYSTEM SIMULATION ---
+    // Create Room
+    const roomRes = await client.query(`
+      INSERT INTO public.chat_rooms (order_id, customer_id, driver_id)
+      SELECT id, customer_id, driver_id FROM public.orders WHERE id = $1
+      ON CONFLICT (order_id) DO UPDATE SET updated_at = now()
+      RETURNING id
+    `, [orderId]);
+    const roomId = roomRes.rows[0].id;
+
+    // Send System Message
+    const driverInfoRes = await client.query(`SELECT full_name, phone_number FROM public.drivers WHERE id = $1`, [driverId]);
+    const driverInfo = driverInfoRes.rows[0];
+
+    await client.query(`
+      INSERT INTO public.messages (room_id, msg_type, content, metadata)
+      VALUES ($1, 'system_pickup', 'تم استلام طلبك! 🏎️', $2)
+    `, [roomId, { 
+      driver_name: driverInfo.full_name || 'سائق وصلني', 
+      driver_phone: driverInfo.phone_number,
+      tracking_enabled: true
+    }]);
+    console.log('💬 Chat Room Created & System Message Sent!');
+    // -----------------------------
+
     // 4. Start Movement Simulation (inline here)
     console.log('📍 Starting GPS Simulation...');
     
