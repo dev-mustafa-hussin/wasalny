@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
+import { Button } from "@/components/ui/button";
 import { Search, Utensils, ShoppingBag } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -7,6 +8,18 @@ import { StoreCard } from "@/components/customer/StoreCard";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Skeleton } from "@/components/ui/skeleton";
+
+const FOOD_TAGS = [
+  { name: "الكل", value: "", icon: "🍽️" },
+  { name: "برجر", value: "برجر", icon: "🍔" },
+  { name: "بيتزا", value: "بيتزا", icon: "🍕" },
+  { name: "شاورما", value: "شاورما", icon: "🌯" },
+  { name: "مشويات", value: "مشويات", icon: "🍢" },
+  { name: "حلا", value: "حلا", icon: "🍰" },
+  { name: "قهوة", value: "قهوة", icon: "☕" },
+  { name: "أرز", value: "أرز", icon: "🍚" },
+  { name: "سوشي", value: "سوشي", icon: "🍣" },
+];
 
 export default function Home() {
   const [search, setSearch] = useState("");
@@ -25,10 +38,25 @@ export default function Home() {
     },
   });
 
+  const { data: productMatchIds = [] } = useQuery({
+    queryKey: ["product-matches", search],
+    queryFn: async () => {
+      if (!search) return [];
+      const { data } = await supabase
+        .from("products")
+        .select("store_id")
+        .ilike("name", `%${search}%`);
+
+      // Return unique store match IDs
+      return [...new Set(data?.map((p) => p.store_id) || [])];
+    },
+    enabled: search.length > 0,
+  });
+
   const filteredStores = stores?.filter((store) => {
-    const matchesSearch = store.name
-      .toLowerCase()
-      .includes(search.toLowerCase());
+    const matchesSearch =
+      store.name.toLowerCase().includes(search.toLowerCase()) ||
+      productMatchIds.includes(store.id);
 
     let matchesFilter = true;
     if (filter !== "all") {
@@ -51,14 +79,33 @@ export default function Home() {
           </p>
 
           {/* Search */}
-          <div className="max-w-md mx-auto relative">
-            <Search className="absolute right-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+          <div className="relative mb-6">
+            <Search className="absolute right-3 top-3 h-4 w-4 text-muted-foreground" />
             <Input
-              placeholder="ابحث عن مطعم أو سوق..."
+              placeholder="ابحث عن متجر أو وجبة (مثال: برجر)..."
+              className="pr-9"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="pr-10"
             />
+          </div>
+
+          {/* Quick Filters (Tags) */}
+          <div className="flex gap-2 overflow-x-auto pb-4 mb-2 no-scrollbar">
+            {FOOD_TAGS.map((tag) => (
+              <Button
+                key={tag.name}
+                variant={
+                  search === tag.value || (tag.value === "" && search === "")
+                    ? "default"
+                    : "outline"
+                }
+                className="rounded-full px-4 h-9 whitespace-nowrap"
+                onClick={() => setSearch(tag.value)}
+              >
+                <span className="ml-2">{tag.icon}</span>
+                {tag.name}
+              </Button>
+            ))}
           </div>
         </div>
       </section>
