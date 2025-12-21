@@ -515,8 +515,6 @@ export default function OrderTracking() {
 
   return (
     <div className="min-h-screen bg-background">
-      <CustomerHeader />
-
       <div className="container py-6">
         <Link
           to="/my-orders"
