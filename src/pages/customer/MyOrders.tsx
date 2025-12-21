@@ -11,7 +11,6 @@ import {
   ChefHat,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import { CustomerHeader } from "@/components/customer/CustomerHeader";
 import { useAuth } from "@/hooks/useAuth";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -75,8 +74,6 @@ export default function MyOrders() {
 
   return (
     <div className="min-h-screen bg-background">
-      <CustomerHeader />
-
       <div className="container py-6">
         {/* ... (breadcrumb remains same) ... */}
 

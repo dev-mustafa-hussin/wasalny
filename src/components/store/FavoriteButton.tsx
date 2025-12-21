@@ -87,6 +87,30 @@ export function FavoriteButton({
           // Unique violation
           setIsFavorite(true);
           toast.success("تم الإضافة للمفضلة");
+        } else if (error.code === "23503") {
+          // Foreign key violation (Profile missing)
+          // Attempt to create profile and retry
+          const { error: profileError } = await supabase
+            .from("profiles")
+            .insert({
+              id: user.id,
+              full_name: user.email?.split("@")[0] || "User",
+            });
+
+          if (!profileError) {
+            // Retry favorite insert
+            const { error: retryError } = await supabase
+              .from("favorites")
+              .insert({ user_id: user.id, store_id: storeId });
+
+            if (!retryError) {
+              setIsFavorite(true);
+              toast.success("تم الإضافة للمفضلة");
+              return;
+            }
+          }
+          console.error("Failed to auto-fix profile:", profileError);
+          toast.error("خطأ في بيانات المستخدم (Profile Missing)");
         } else {
           console.error("Error adding favorite:", error);
           toast.error("حدث خطأ: " + error.message);
