@@ -1,7 +1,8 @@
-import { Link } from 'react-router-dom';
-import { Clock, MapPin, Store } from 'lucide-react';
-import { Card, CardContent } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
+import { Link } from "react-router-dom";
+import { Clock, MapPin, Store } from "lucide-react";
+import { Card, CardContent } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { FavoriteButton } from "@/components/store/FavoriteButton";
 
 interface StoreCardProps {
   id: string;
@@ -45,10 +46,16 @@ export function StoreCard({
           )}
           <Badge
             className="absolute top-2 right-2"
-            variant={type === 'restaurant' ? 'default' : 'secondary'}
+            variant={type === "restaurant" ? "default" : "secondary"}
           >
-            {type === 'restaurant' ? 'مطعم' : 'سوق'}
+            {type === "restaurant" ? "مطعم" : "سوق"}
           </Badge>
+          <div className="absolute top-2 left-2 z-10">
+            <FavoriteButton
+              storeId={id}
+              className="bg-white/80 hover:bg-white"
+            />
+          </div>
           {!isOpen && (
             <div className="absolute inset-0 bg-background/80 flex items-center justify-center">
               <span className="text-muted-foreground font-medium">مغلق</span>

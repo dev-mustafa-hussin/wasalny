@@ -30,7 +30,7 @@ import { StarRating } from "@/components/ui/star-rating";
 import { ETACard } from "@/components/customer/ETACard";
 import { CustomerOrderMap } from "@/components/customer/CustomerOrderMap";
 import { PushNotificationToggle } from "@/components/customer/PushNotificationToggle";
-import { DriverRatingDialog } from "@/components/customer/DriverRatingDialog";
+import { RatingDialog } from "@/components/customer/RatingDialog";
 import { DriverInfoCard } from "@/components/customer/DriverInfoCard";
 import {
   AlertDialog,
@@ -91,10 +91,8 @@ export default function OrderTracking() {
   const { user } = useAuth();
   const queryClient = useQueryClient();
   const [isCancelling, setIsCancelling] = useState(false);
-  const [rating, setRating] = useState(0);
-  const [isSubmittingRating, setIsSubmittingRating] = useState(false);
   const [showDriverRatingDialog, setShowDriverRatingDialog] = useState(false);
-  const [driverRatingExists, setDriverRatingExists] = useState(false);
+  const [showStoreRatingDialog, setShowStoreRatingDialog] = useState(false);
   // const [driverLocation, setDriverLocation] = useState<DriverLocation | null>(null);
 
   const { data: order, isLoading } = useQuery({
@@ -118,20 +116,22 @@ export default function OrderTracking() {
     enabled: !!id && !!user,
   });
 
-  // Check if driver rating exists
-  const { data: driverRating, refetch: refetchDriverRating } = useQuery({
-    queryKey: ["driver-rating", id],
+  // Fetch Reviews (Store & Driver)
+  const { data: reviews, refetch: refetchReviews } = useQuery({
+    queryKey: ["order-reviews", id],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from("driver_ratings")
+        .from("reviews")
         .select("*")
-        .eq("order_id", id)
-        .maybeSingle();
+        .eq("order_id", id);
       if (error) throw error;
-      return data;
+      return data || [];
     },
-    enabled: !!id && !!order?.driver_id && order?.status === "delivered",
+    enabled: !!id && order?.status === "delivered",
   });
+
+  const storeReview = reviews?.find((r) => r.type === "store");
+  const driverReview = reviews?.find((r) => r.type === "driver");
 
   // Fetch driver info
   const { data: driverInfo } = useQuery({
@@ -696,19 +696,28 @@ export default function OrderTracking() {
               </Card>
             )}
 
-            {/* Rating Card - Show only for delivered orders */}
+            {/* Store Rating Card */}
             {order.status === "delivered" && (
               <Card className="border-primary/50 bg-primary/5">
                 <CardHeader>
                   <CardTitle className="text-lg flex items-center gap-2">
                     <Star className="h-5 w-5 text-yellow-400" />
-                    {order.rating ? "تقييمك للطلب" : "قيّم تجربتك"}
+                    {storeReview ? "تقييمك للمتجر" : "قيّم تجربتك مع المتجر"}
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  {order.rating ? (
+                  {storeReview ? (
                     <div className="text-center">
-                      <StarRating value={order.rating} readonly size="lg" />
+                      <StarRating
+                        value={storeReview.rating}
+                        readonly
+                        size="lg"
+                      />
+                      {storeReview.comment && (
+                        <p className="text-sm text-muted-foreground mt-2">
+                          "{storeReview.comment}"
+                        </p>
+                      )}
                       <p className="text-muted-foreground mt-2">
                         شكراً لتقييمك!
                       </p>
@@ -716,28 +725,13 @@ export default function OrderTracking() {
                   ) : (
                     <div className="space-y-4">
                       <p className="text-muted-foreground">
-                        كيف كانت تجربتك مع هذا الطلب؟
+                        كيف كانت تجربتك مع {order.stores?.name}؟
                       </p>
-                      <div className="flex justify-center">
-                        <StarRating
-                          value={rating}
-                          onChange={setRating}
-                          size="lg"
-                        />
-                      </div>
                       <Button
                         className="w-full"
-                        onClick={handleSubmitRating}
-                        disabled={rating === 0 || isSubmittingRating}
+                        onClick={() => setShowStoreRatingDialog(true)}
                       >
-                        {isSubmittingRating ? (
-                          <>
-                            <Loader2 className="h-4 w-4 ml-2 animate-spin" />
-                            جاري الإرسال...
-                          </>
-                        ) : (
-                          "إرسال التقييم"
-                        )}
+                        قيّم المتجر
                       </Button>
                     </div>
                   )}
@@ -751,20 +745,20 @@ export default function OrderTracking() {
                 <CardHeader>
                   <CardTitle className="text-lg flex items-center gap-2">
                     <UserCheck className="h-5 w-5 text-green-500" />
-                    {driverRating ? "تقييمك للمندوب" : "قيّم المندوب"}
+                    {driverReview ? "تقييمك للمندوب" : "قيّم المندوب"}
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  {driverRating ? (
+                  {driverReview ? (
                     <div className="text-center space-y-2">
                       <StarRating
-                        value={driverRating.rating}
+                        value={driverReview.rating}
                         readonly
                         size="lg"
                       />
-                      {driverRating.comment && (
+                      {driverReview.comment && (
                         <p className="text-sm text-muted-foreground">
-                          "{driverRating.comment}"
+                          "{driverReview.comment}"
                         </p>
                       )}
                       <p className="text-muted-foreground mt-2">
@@ -790,16 +784,31 @@ export default function OrderTracking() {
               </Card>
             )}
 
-            {/* Driver Rating Dialog */}
-            {order.driver_id && driverInfo && (
-              <DriverRatingDialog
-                open={showDriverRatingDialog}
-                onOpenChange={setShowDriverRatingDialog}
-                orderId={order.id}
-                driverId={driverInfo.id}
-                driverName={driverInfo.name}
-                onRatingSubmitted={() => refetchDriverRating()}
-              />
+            {/* Dialogs */}
+            {order.status === "delivered" && (
+              <>
+                <RatingDialog
+                  open={showStoreRatingDialog}
+                  onOpenChange={setShowStoreRatingDialog}
+                  orderId={order.id}
+                  targetId={order.store_id}
+                  targetName={order.stores?.name}
+                  type="store"
+                  onRatingSubmitted={refetchReviews}
+                />
+
+                {order.driver_id && driverInfo && (
+                  <RatingDialog
+                    open={showDriverRatingDialog}
+                    onOpenChange={setShowDriverRatingDialog}
+                    orderId={order.id}
+                    targetId={driverInfo.id} // Not user_id, but driver.id (uuid from drivers table)
+                    targetName={driverInfo.name}
+                    type="driver"
+                    onRatingSubmitted={refetchReviews}
+                  />
+                )}
+              </>
             )}
 
             {/* Order Details */}
