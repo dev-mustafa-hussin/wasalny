@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import {
@@ -9,12 +9,14 @@ import {
   Truck,
   XCircle,
   ChefHat,
+  Star,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
+import { OrderRatingDialog } from "@/components/customer/OrderRatingDialog";
 import { format } from "date-fns";
 import { ar } from "date-fns/locale";
 import { toast } from "sonner";
@@ -39,6 +41,10 @@ const statusConfig: Record<
 export default function MyOrders() {
   const { user } = useAuth();
   const queryClient = useQueryClient();
+  const [ratingOrder, setRatingOrder] = useState<{
+    id: string;
+    storeId: string;
+  } | null>(null);
 
   const { data: orders, isLoading } = useQuery({
     queryKey: ["my-orders", user?.id],
@@ -147,11 +153,44 @@ export default function MyOrders() {
                         </p>
                       )}
                     </CardContent>
+                    {order.status === "delivered" && !order.rating && (
+                      <div className="px-4 pb-4 border-t pt-3">
+                        <div className="flex justify-end">
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={(e) => {
+                              e.preventDefault();
+                              e.stopPropagation();
+                              setRatingOrder({
+                                id: order.id,
+                                storeId: order.store_id,
+                              });
+                            }}
+                          >
+                            <Star className="h-4 w-4 ml-1" />
+                            تقييم الطلب
+                          </Button>
+                        </div>
+                      </div>
+                    )}
                   </Card>
                 </Link>
               );
             })}
           </div>
+        )}
+        {/* Rating Dialog */}
+        {ratingOrder && (
+          <OrderRatingDialog
+            open={!!ratingOrder}
+            onOpenChange={(open) => !open && setRatingOrder(null)}
+            orderId={ratingOrder.id}
+            storeId={ratingOrder.storeId}
+            onSuccess={() => {
+              queryClient.invalidateQueries({ queryKey: ["my-orders"] });
+            }}
+          />
         )}
       </div>
     </div>
