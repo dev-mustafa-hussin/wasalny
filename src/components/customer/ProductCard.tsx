@@ -1,8 +1,8 @@
-import { Plus, Minus } from 'lucide-react';
-import { Card, CardContent } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { useCart } from '@/contexts/CartContext';
-import { useState } from 'react';
+import { Plus, Minus } from "lucide-react";
+import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { useCart } from "@/contexts/CartContext";
+import { useState } from "react";
 
 interface ProductCardProps {
   id: string;
@@ -54,7 +54,7 @@ export function ProductCard({
   };
 
   return (
-    <Card className={`overflow-hidden ${!available ? 'opacity-60' : ''}`}>
+    <Card className={`overflow-hidden ${!available ? "opacity-60" : ""}`}>
       <div className="flex gap-4 p-4">
         <div className="flex-1">
           <h3 className="font-semibold mb-1">{name}</h3>
@@ -78,17 +78,33 @@ export function ProductCard({
           {available && (
             <div className="mt-2">
               {quantity === 0 ? (
-                <Button size="sm" onClick={handleAdd}>
-                  <Plus className="h-4 w-4 ml-1" />
+                <Button
+                  size="sm"
+                  onClick={handleAddToCart}
+                  disabled={!isAvailable}
+                  className="active:scale-90 transition-transform hover:scale-105"
+                >
                   إضافة
                 </Button>
               ) : (
                 <div className="flex items-center gap-2">
-                  <Button size="icon" variant="outline" className="h-8 w-8" onClick={handleDecrease}>
+                  <Button
+                    size="icon"
+                    variant="outline"
+                    className="h-8 w-8"
+                    onClick={handleDecrease}
+                  >
                     <Minus className="h-4 w-4" />
                   </Button>
-                  <span className="w-6 text-center font-medium">{quantity}</span>
-                  <Button size="icon" variant="outline" className="h-8 w-8" onClick={handleIncrease}>
+                  <span className="w-6 text-center font-medium">
+                    {quantity}
+                  </span>
+                  <Button
+                    size="icon"
+                    variant="outline"
+                    className="h-8 w-8"
+                    onClick={handleIncrease}
+                  >
                     <Plus className="h-4 w-4" />
                   </Button>
                 </div>
@@ -96,7 +112,9 @@ export function ProductCard({
             </div>
           )}
           {!available && (
-            <span className="text-xs text-muted-foreground mt-2">غير متوفر</span>
+            <span className="text-xs text-muted-foreground mt-2">
+              غير متوفر
+            </span>
           )}
         </div>
       </div>

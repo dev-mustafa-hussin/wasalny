@@ -1,6 +1,8 @@
+```
 import { Link, useNavigate } from "react-router-dom";
-import { ShoppingCart, User, LogOut } from "lucide-react";
+import { ShoppingCart, User, LogOut, Heart } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { ModeToggle } from "@/components/mode-toggle";
 import { useAuth } from "@/hooks/useAuth";
 import { useCart } from "@/contexts/CartContext";
 import {
@@ -39,6 +41,7 @@ export function CustomerHeader() {
         </div>
 
         <div className="flex items-center gap-2">
+          <ModeToggle />
           <Button variant="ghost" size="icon" className="relative" asChild>
             <Link to="/cart">
               <ShoppingCart className="h-5 w-5" />

@@ -2,6 +2,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { Analytics } from "@vercel/analytics/react";
 import { TooltipProvider } from "@/components/ui/tooltip";
+import { ThemeProvider } from "@/components/theme-provider";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/hooks/useAuth";
@@ -58,71 +59,76 @@ const App = () => (
   <QueryClientProvider client={queryClient}>
     <AuthProvider>
       <CartProvider>
-        <TooltipProvider>
-          <Toaster />
-          <Sonner />
-          <BrowserRouter>
-            <Routes>
-              {/* Customer Routes */}
-              <Route element={<CustomerLayout />}>
-                <Route path="/" element={<Home />} />
-                <Route path="/store/:id" element={<StoreDetail />} />
-                <Route path="/cart" element={<Cart />} />
-                <Route path="/checkout" element={<Checkout />} />
-                <Route path="/order-success/:id" element={<OrderSuccess />} />
-                <Route path="/my-orders" element={<MyOrders />} />
-                <Route path="/order/:id" element={<OrderTracking />} />
-                <Route path="favorites" element={<Favorites />} />
-                <Route path="addresses" element={<Addresses />} />
-                <Route path="profile" element={<Profile />} />
-                <Route path="contact" element={<Contact />} />
-                <Route path="faq" element={<FAQ />} />
-              </Route>
-              <Route path="/auth" element={<Auth />} />
-
-              {/* Driver Routes */}
-              <Route path="/driver" element={<DriverLayout />}>
-                <Route index element={<DriverDashboard />} />
-                <Route path="earnings" element={<DriverEarnings />} />
-                <Route path="history" element={<DriverHistory />} />
-                <Route path="ratings" element={<DriverRatings />} />
-                <Route path="settings" element={<DriverSettings />} />
-              </Route>
-
-              {/* Admin Routes */}
-              <Route path="/admin" element={<AdminLayout />}>
-                <Route index element={<Dashboard />} />
-                <Route path="stores" element={<Stores />} />
-                <Route path="products" element={<Products />} />
-                <Route path="orders" element={<Orders />} />
-                <Route path="drivers" element={<Drivers />} />
-                <Route path="drivers-tracking" element={<DriversTracking />} />
-                <Route path="reports" element={<Reports />} />
-                <Route path="email-templates" element={<EmailTemplates />} />
-                <Route path="settings" element={<Settings />} />
-                <Route path="approvals" element={<Approvals />} />
-                <Route path="users" element={<Users />} />
-              </Route>
-
-              {/* Store Owner Routes */}
-              <Route
-                element={<RoleBasedRoute allowedRoles={["store_owner"]} />}
-              >
-                <Route path="/store-owner" element={<StoreOwnerLayout />}>
-                  <Route index element={<StoreDashboard />} />
-                  <Route path="products" element={<StoreProducts />} />
-                  <Route path="orders" element={<StoreOrders />} />
-                  <Route path="settings" element={<StoreSettings />} />
-                  <Route path="reports" element={<StoreReports />} />
-                  <Route path="profile" element={<StoreProfile />} />
+        <ThemeProvider defaultTheme="system" storageKey="vite-ui-theme">
+          <TooltipProvider>
+            <Toaster />
+            <Sonner />
+            <BrowserRouter>
+              <Routes>
+                {/* Customer Routes */}
+                <Route element={<CustomerLayout />}>
+                  <Route path="/" element={<Home />} />
+                  <Route path="/store/:id" element={<StoreDetail />} />
+                  <Route path="/cart" element={<Cart />} />
+                  <Route path="/checkout" element={<Checkout />} />
+                  <Route path="/order-success/:id" element={<OrderSuccess />} />
+                  <Route path="/my-orders" element={<MyOrders />} />
+                  <Route path="/order/:id" element={<OrderTracking />} />
+                  <Route path="favorites" element={<Favorites />} />
+                  <Route path="addresses" element={<Addresses />} />
+                  <Route path="profile" element={<Profile />} />
+                  <Route path="contact" element={<Contact />} />
+                  <Route path="faq" element={<FAQ />} />
                 </Route>
-              </Route>
+                <Route path="/auth" element={<Auth />} />
 
-              <Route path="*" element={<NotFound />} />
-            </Routes>
-            <Analytics />
-          </BrowserRouter>
-        </TooltipProvider>
+                {/* Driver Routes */}
+                <Route path="/driver" element={<DriverLayout />}>
+                  <Route index element={<DriverDashboard />} />
+                  <Route path="earnings" element={<DriverEarnings />} />
+                  <Route path="history" element={<DriverHistory />} />
+                  <Route path="ratings" element={<DriverRatings />} />
+                  <Route path="settings" element={<DriverSettings />} />
+                </Route>
+
+                {/* Admin Routes */}
+                <Route path="/admin" element={<AdminLayout />}>
+                  <Route index element={<Dashboard />} />
+                  <Route path="stores" element={<Stores />} />
+                  <Route path="products" element={<Products />} />
+                  <Route path="orders" element={<Orders />} />
+                  <Route path="drivers" element={<Drivers />} />
+                  <Route
+                    path="drivers-tracking"
+                    element={<DriversTracking />}
+                  />
+                  <Route path="reports" element={<Reports />} />
+                  <Route path="email-templates" element={<EmailTemplates />} />
+                  <Route path="settings" element={<Settings />} />
+                  <Route path="approvals" element={<Approvals />} />
+                  <Route path="users" element={<Users />} />
+                </Route>
+
+                {/* Store Owner Routes */}
+                <Route
+                  element={<RoleBasedRoute allowedRoles={["store_owner"]} />}
+                >
+                  <Route path="/store-owner" element={<StoreOwnerLayout />}>
+                    <Route index element={<StoreDashboard />} />
+                    <Route path="products" element={<StoreProducts />} />
+                    <Route path="orders" element={<StoreOrders />} />
+                    <Route path="settings" element={<StoreSettings />} />
+                    <Route path="reports" element={<StoreReports />} />
+                    <Route path="profile" element={<StoreProfile />} />
+                  </Route>
+                </Route>
+
+                <Route path="*" element={<NotFound />} />
+              </Routes>
+              <Analytics />
+            </BrowserRouter>
+          </TooltipProvider>
+        </ThemeProvider>
       </CartProvider>
     </AuthProvider>
   </QueryClientProvider>

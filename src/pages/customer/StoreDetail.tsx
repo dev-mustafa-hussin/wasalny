@@ -13,12 +13,23 @@ import { ProductCard } from "@/components/customer/ProductCard";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useCart } from "@/contexts/CartContext";
+import { useEffect, useState } from "react";
 
 export default function StoreDetail() {
   const { id } = useParams<{ id: string }>();
   const { getItemCount, getTotal } = useCart();
   const itemCount = getItemCount();
   const total = getTotal();
+
+  // Animation trigger for cart change
+  const [animate, setAnimate] = useState(false);
+  useEffect(() => {
+    if (itemCount > 0) {
+      setAnimate(true);
+      const timer = setTimeout(() => setAnimate(false), 300);
+      return () => clearTimeout(timer);
+    }
+  }, [itemCount]);
 
   const { data: store, isLoading: storeLoading } = useQuery({
     queryKey: ["store", id],
@@ -153,9 +164,15 @@ export default function StoreDetail() {
 
       {/* Floating Cart Button */}
       {itemCount > 0 && (
-        <div className="fixed bottom-0 left-0 right-0 p-4 bg-background/95 backdrop-blur border-t">
+        <div className="fixed bottom-0 left-0 right-0 p-4 bg-background/95 backdrop-blur border-t z-50">
           <div className="container">
-            <Button asChild className="w-full" size="lg">
+            <Button
+              asChild
+              className={`w-full transition-transform ${
+                animate ? "scale-105 bg-primary/90" : ""
+              }`}
+              size="lg"
+            >
               <Link to="/cart" className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <ShoppingCart className="h-5 w-5" />
