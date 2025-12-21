@@ -83,7 +83,14 @@ export function FavoriteButton({
         setIsFavorite(true);
         toast.success("تم الإضافة للمفضلة");
       } else {
-        toast.error("حدث خطأ");
+        if (error.code === "23505") {
+          // Unique violation
+          setIsFavorite(true);
+          toast.success("تم الإضافة للمفضلة");
+        } else {
+          console.error("Error adding favorite:", error);
+          toast.error("حدث خطأ: " + error.message);
+        }
       }
     }
     setLoading(false);
