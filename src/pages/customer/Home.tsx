@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Search, Utensils, ShoppingBag } from "lucide-react";
+import { PromotionsBanner } from "@/components/customer/PromotionsBanner";
 import { supabase } from "@/integrations/supabase/client";
 
 import { StoreCard } from "@/components/customer/StoreCard";
@@ -110,8 +111,10 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Filters */}
-      <section className="container py-6">
+      {/* Promotions Banner */}
+      <PromotionsBanner />
+
+      <section className="container max-w-4xl mx-auto px-4 pb-20">
         <Tabs
           value={filter}
           onValueChange={(v) => setFilter(v as typeof filter)}
