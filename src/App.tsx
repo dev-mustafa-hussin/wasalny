@@ -32,6 +32,7 @@ import OrderSuccess from "./pages/customer/OrderSuccess";
 import MyOrders from "./pages/customer/MyOrders";
 import OrderTracking from "./pages/customer/OrderTracking";
 import Favorites from "./pages/customer/Favorites";
+import Addresses from "./pages/customer/Addresses";
 // Driver pages
 import DriverDashboard from "./pages/driver/DriverDashboard";
 import DriverEarnings from "./pages/driver/DriverEarnings";
@@ -69,6 +70,7 @@ const App = () => (
                 <Route path="/my-orders" element={<MyOrders />} />
                 <Route path="/order/:id" element={<OrderTracking />} />
                 <Route path="/favorites" element={<Favorites />} />
+                <Route path="/addresses" element={<Addresses />} />
               </Route>
               <Route path="/auth" element={<Auth />} />
 
