@@ -1,12 +1,18 @@
-import { useParams, Link } from 'react-router-dom';
-import { useQuery } from '@tanstack/react-query';
-import { ArrowRight, Clock, MapPin, Phone, Store, ShoppingCart } from 'lucide-react';
-import { supabase } from '@/integrations/supabase/client';
-import { CustomerHeader } from '@/components/customer/CustomerHeader';
-import { ProductCard } from '@/components/customer/ProductCard';
-import { Button } from '@/components/ui/button';
-import { Skeleton } from '@/components/ui/skeleton';
-import { useCart } from '@/contexts/CartContext';
+import { useParams, Link } from "react-router-dom";
+import { useQuery } from "@tanstack/react-query";
+import {
+  ArrowRight,
+  Clock,
+  MapPin,
+  Phone,
+  Store,
+  ShoppingCart,
+} from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { ProductCard } from "@/components/customer/ProductCard";
+import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
+import { useCart } from "@/contexts/CartContext";
 
 export default function StoreDetail() {
   const { id } = useParams<{ id: string }>();
@@ -15,12 +21,12 @@ export default function StoreDetail() {
   const total = getTotal();
 
   const { data: store, isLoading: storeLoading } = useQuery({
-    queryKey: ['store', id],
+    queryKey: ["store", id],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from('stores')
-        .select('*')
-        .eq('id', id)
+        .from("stores")
+        .select("*")
+        .eq("id", id)
         .single();
       if (error) throw error;
       return data;
@@ -28,13 +34,13 @@ export default function StoreDetail() {
   });
 
   const { data: products, isLoading: productsLoading } = useQuery({
-    queryKey: ['products', id],
+    queryKey: ["products", id],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from('products')
-        .select('*')
-        .eq('store_id', id)
-        .order('name');
+        .from("products")
+        .select("*")
+        .eq("store_id", id)
+        .order("name");
       if (error) throw error;
       return data;
     },
@@ -45,8 +51,6 @@ export default function StoreDetail() {
 
   return (
     <div className="min-h-screen bg-background pb-24">
-      <CustomerHeader />
-
       <div className="container py-6">
         <Link
           to="/"
@@ -87,7 +91,9 @@ export default function StoreDetail() {
                   {store.name}
                 </h1>
                 {store.description && (
-                  <p className="text-muted-foreground mt-1">{store.description}</p>
+                  <p className="text-muted-foreground mt-1">
+                    {store.description}
+                  </p>
                 )}
               </div>
             </div>
@@ -139,7 +145,9 @@ export default function StoreDetail() {
             )}
           </>
         ) : (
-          <p className="text-center py-12 text-muted-foreground">المتجر غير موجود</p>
+          <p className="text-center py-12 text-muted-foreground">
+            المتجر غير موجود
+          </p>
         )}
       </div>
 
