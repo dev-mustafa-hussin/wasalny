@@ -13,6 +13,7 @@ import { useToast } from "@/hooks/use-toast";
 import { ShoppingCart, MapPin, Clock, User } from "lucide-react";
 import { format } from "date-fns";
 import { ar } from "date-fns/locale";
+import { ExportButton } from "@/components/common/ExportButton";
 
 interface Order {
   id: string;
@@ -138,6 +139,28 @@ export default function Orders() {
       ? orders
       : orders.filter((o) => o.status === filterStatus);
 
+  const exportHeaders = {
+    id: "رقم الطلب",
+    customer_name: "اسم العميل",
+    store_name: "المتجر",
+    status: "الحالة",
+    total_amount: "المبلغ الكلي",
+    delivery_fee: "رسوم التوصيل",
+    delivery_address: "العنوان",
+    created_at: "تاريخ الطلب",
+  };
+
+  const exportData = filteredOrders.map((order) => ({
+    id: order.id,
+    customer_name: order.profiles?.full_name || "غير معروف",
+    store_name: order.stores?.name || "غير معروف",
+    status: getStatusInfo(order.status).label,
+    total_amount: order.total_amount,
+    delivery_fee: order.delivery_fee,
+    delivery_address: order.delivery_address,
+    created_at: format(new Date(order.created_at), "yyyy-MM-dd HH:mm"),
+  }));
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between flex-wrap gap-4">
@@ -145,19 +168,27 @@ export default function Orders() {
           <h1 className="text-2xl font-bold">الطلبات</h1>
           <p className="text-muted-foreground">إدارة ومتابعة الطلبات</p>
         </div>
-        <Select value={filterStatus} onValueChange={setFilterStatus}>
-          <SelectTrigger className="w-40">
-            <SelectValue placeholder="فلترة" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">الكل</SelectItem>
-            {statusOptions.map((s) => (
-              <SelectItem key={s.value} value={s.value}>
-                {s.label}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+        <div className="flex gap-2">
+          <ExportButton
+            data={exportData}
+            filename="admin_orders"
+            headers={exportHeaders}
+            label="تصدير (Excel)"
+          />
+          <Select value={filterStatus} onValueChange={setFilterStatus}>
+            <SelectTrigger className="w-40">
+              <SelectValue placeholder="فلترة" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">الكل</SelectItem>
+              {statusOptions.map((s) => (
+                <SelectItem key={s.value} value={s.value}>
+                  {s.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
       </div>
 
       {loading ? (
