@@ -30,7 +30,7 @@ export function ProductCard({
   const quantity = cartItem?.quantity || 0;
   const available = isAvailable !== false;
 
-  const handleAdd = () => {
+  const handleAddToCart = () => {
     addItem({
       productId: id,
       productName: name,
