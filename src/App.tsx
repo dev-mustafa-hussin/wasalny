@@ -43,6 +43,7 @@ import DriverEarnings from "./pages/driver/DriverEarnings";
 import DriverHistory from "./pages/driver/DriverHistory";
 import DriverSettings from "./pages/driver/DriverSettings";
 import DriverRatings from "./pages/driver/DriverRatings";
+import DriverCurrentOrders from "./pages/driver/DriverCurrentOrders";
 
 // Store pages
 import StoreDashboard from "./pages/store/Dashboard";
@@ -85,6 +86,7 @@ const App = () => (
                 {/* Driver Routes */}
                 <Route path="/driver" element={<DriverLayout />}>
                   <Route index element={<DriverDashboard />} />
+                  <Route path="current" element={<DriverCurrentOrders />} />
                   <Route path="earnings" element={<DriverEarnings />} />
                   <Route path="history" element={<DriverHistory />} />
                   <Route path="ratings" element={<DriverRatings />} />
