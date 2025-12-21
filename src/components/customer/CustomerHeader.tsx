@@ -59,6 +59,11 @@ export function CustomerHeader() {
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-48">
                 <DropdownMenuItem asChild>
+                  <Link to="/profile" className="w-full cursor-pointer">
+                    الملف الشخصي
+                  </Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem asChild>
                   <Link to="/my-orders" className="w-full cursor-pointer">
                     طلباتي
                   </Link>

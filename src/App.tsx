@@ -33,6 +33,7 @@ import MyOrders from "./pages/customer/MyOrders";
 import OrderTracking from "./pages/customer/OrderTracking";
 import Favorites from "./pages/customer/Favorites";
 import Addresses from "./pages/customer/Addresses";
+import Profile from "./pages/customer/Profile";
 // Driver pages
 import DriverDashboard from "./pages/driver/DriverDashboard";
 import DriverEarnings from "./pages/driver/DriverEarnings";
@@ -71,6 +72,7 @@ const App = () => (
                 <Route path="/order/:id" element={<OrderTracking />} />
                 <Route path="/favorites" element={<Favorites />} />
                 <Route path="/addresses" element={<Addresses />} />
+                <Route path="/profile" element={<Profile />} />
               </Route>
               <Route path="/auth" element={<Auth />} />
 
