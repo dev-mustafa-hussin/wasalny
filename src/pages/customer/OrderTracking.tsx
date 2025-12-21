@@ -30,7 +30,7 @@ import { StarRating } from "@/components/ui/star-rating";
 import { ETACard } from "@/components/customer/ETACard";
 import { CustomerOrderMap } from "@/components/customer/CustomerOrderMap";
 import { PushNotificationToggle } from "@/components/customer/PushNotificationToggle";
-import { RatingDialog } from "@/components/customer/RatingDialog";
+
 import { DriverInfoCard } from "@/components/customer/DriverInfoCard";
 import {
   AlertDialog,
