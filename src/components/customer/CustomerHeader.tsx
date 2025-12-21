@@ -63,6 +63,11 @@ export function CustomerHeader() {
                     طلباتي
                   </Link>
                 </DropdownMenuItem>
+                <DropdownMenuItem asChild>
+                  <Link to="/favorites" className="w-full cursor-pointer">
+                    المفضلة
+                  </Link>
+                </DropdownMenuItem>
                 {userRole === "admin" && (
                   <DropdownMenuItem asChild>
                     <Link to="/admin" className="w-full cursor-pointer">

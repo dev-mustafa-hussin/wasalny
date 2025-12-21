@@ -31,6 +31,7 @@ import Checkout from "./pages/customer/Checkout";
 import OrderSuccess from "./pages/customer/OrderSuccess";
 import MyOrders from "./pages/customer/MyOrders";
 import OrderTracking from "./pages/customer/OrderTracking";
+import Favorites from "./pages/customer/Favorites";
 // Driver pages
 import DriverDashboard from "./pages/driver/DriverDashboard";
 import DriverEarnings from "./pages/driver/DriverEarnings";
@@ -67,6 +68,7 @@ const App = () => (
                 <Route path="/order-success/:id" element={<OrderSuccess />} />
                 <Route path="/my-orders" element={<MyOrders />} />
                 <Route path="/order/:id" element={<OrderTracking />} />
+                <Route path="/favorites" element={<Favorites />} />
               </Route>
               <Route path="/auth" element={<Auth />} />
 
