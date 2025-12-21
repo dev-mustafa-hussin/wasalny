@@ -30,8 +30,8 @@ export function StoreCard({
   const isOpen = isActive !== false;
 
   return (
-    <Link to={`/store/${id}`}>
-      <Card className="overflow-hidden hover:shadow-lg transition-shadow cursor-pointer group">
+    <Card className="relative overflow-hidden hover:shadow-lg transition-shadow cursor-pointer group">
+      <Link to={`/store/${id}`} className="block h-full">
         <div className="relative h-40 bg-muted">
           {imageUrl ? (
             <img
@@ -50,12 +50,7 @@ export function StoreCard({
           >
             {type === "restaurant" ? "مطعم" : "سوق"}
           </Badge>
-          <div className="absolute top-2 left-2 z-10">
-            <FavoriteButton
-              storeId={id}
-              className="bg-white/80 hover:bg-white"
-            />
-          </div>
+
           {!isOpen && (
             <div className="absolute inset-0 bg-background/80 flex items-center justify-center">
               <span className="text-muted-foreground font-medium">مغلق</span>
@@ -86,7 +81,13 @@ export function StoreCard({
             )}
           </div>
         </CardContent>
-      </Card>
-    </Link>
+      </Link>
+
+      {/* Button is now a direct child of Card, positioned absolutely */}
+      {/* This fixes the invalid HTML of having a button inside an anchor (Link) */}
+      <div className="absolute top-2 left-2 z-20">
+        <FavoriteButton storeId={id} className="bg-white/80 hover:bg-white" />
+      </div>
+    </Card>
   );
 }

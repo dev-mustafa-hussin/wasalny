@@ -46,6 +46,7 @@ export function FavoriteButton({
   };
 
   const toggleFavorite = async (e: React.MouseEvent) => {
+    e.preventDefault();
     e.stopPropagation(); // Prevent ensuring parent click (like card navigation) doesn't fire
 
     const {
