@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Search, Utensils, ShoppingBag, Heart } from "lucide-react";
+import { Search, Utensils, ShoppingBag } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 
 import { StoreCard } from "@/components/customer/StoreCard";
@@ -10,31 +10,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 
 export default function Home() {
   const [search, setSearch] = useState("");
-  const [filter, setFilter] = useState<
-    "all" | "restaurant" | "market" | "favorites"
-  >("all");
-  const [favorites, setFavorites] = useState<string[]>([]);
-
-  // Fetch favorites
-  useQuery({
-    queryKey: ["user-favorites"],
-    queryFn: async () => {
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
-      if (!user) return [];
-
-      const { data } = await supabase
-        .from("favorites")
-        .select("store_id")
-        .eq("user_id", user.id);
-
-      if (data) {
-        setFavorites(data.map((f) => f.store_id));
-      }
-      return data;
-    },
-  });
+  const [filter, setFilter] = useState<"all" | "restaurant" | "market">("all");
 
   const { data: stores, isLoading } = useQuery({
     queryKey: ["stores"],
@@ -55,9 +31,7 @@ export default function Home() {
       .includes(search.toLowerCase());
 
     let matchesFilter = true;
-    if (filter === "favorites") {
-      matchesFilter = favorites.includes(store.id);
-    } else if (filter !== "all") {
+    if (filter !== "all") {
       matchesFilter = store.type === filter;
     }
 
@@ -104,10 +78,6 @@ export default function Home() {
             <TabsTrigger value="market" className="flex items-center gap-1">
               <ShoppingBag className="h-4 w-4" />
               أسواق
-            </TabsTrigger>
-            <TabsTrigger value="favorites" className="flex items-center gap-1">
-              <Heart className="h-4 w-4" />
-              المفضلة
             </TabsTrigger>
           </TabsList>
         </Tabs>

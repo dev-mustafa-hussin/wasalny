@@ -40,8 +40,11 @@ export function StoreCard({
               className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
             />
           ) : (
-            <div className="w-full h-full flex items-center justify-center">
-              <Store className="h-16 w-16 text-muted-foreground/50" />
+          ) : (
+            <div className="w-full h-full flex items-center justify-center bg-primary/5">
+              <div className="rounded-full bg-background/60 p-4 backdrop-blur-sm shadow-sm">
+                <Store className="h-8 w-8 text-primary" />
+              </div>
             </div>
           )}
           <Badge
