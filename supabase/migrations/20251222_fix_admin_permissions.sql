@@ -1,70 +1,83 @@
--- Super Admin & RLS Fixes (Updated)
+-- Final Admin & Schema Fixes (Includes Table Creation)
 
--- 1. Ensure the specific user is an ADMIN
+-- 1. Create delivery_settings if missing
+CREATE TABLE IF NOT EXISTS public.delivery_settings (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  base_price DECIMAL(10,2) DEFAULT 10.00,
+  price_per_km DECIMAL(10,2) DEFAULT 2.00,
+  min_order_amount DECIMAL(10,2) DEFAULT 20.00,
+  created_at TIMESTAMPTZ DEFAULT now() NOT NULL,
+  updated_at TIMESTAMPTZ DEFAULT now() NOT NULL
+);
+
+-- Enable RLS
+ALTER TABLE public.delivery_settings ENABLE ROW LEVEL SECURITY;
+
+-- 2. Create email_templates if missing
+CREATE TABLE IF NOT EXISTS public.email_templates (
+  id uuid NOT NULL DEFAULT gen_random_uuid() PRIMARY KEY,
+  template_key text NOT NULL UNIQUE,
+  subject_template text NOT NULL,
+  header_text text NOT NULL DEFAULT 'وصلني - Waslni',
+  primary_color text NOT NULL DEFAULT '#3b82f6',
+  secondary_color text NOT NULL DEFAULT '#1d4ed8',
+  footer_text text NOT NULL DEFAULT 'شكراً لاستخدامك وصلني',
+  footer_text_en text NOT NULL DEFAULT 'Thank you for using Waslni',
+  custom_message_pending text,
+  custom_message_confirmed text,
+  custom_message_preparing text,
+  custom_message_ready text,
+  custom_message_out_for_delivery text,
+  custom_message_delivered text,
+  custom_message_cancelled text,
+  created_at timestamp with time zone NOT NULL DEFAULT now(),
+  updated_at timestamp with time zone NOT NULL DEFAULT now()
+);
+
+-- Enable RLS
+ALTER TABLE public.email_templates ENABLE ROW LEVEL SECURITY;
+
+
+-- 3. Ensure ADMIN Role for the user
 DO $$
 DECLARE
   v_user_email text := 'dev-mustafa-hussin@hotmail.com';
   v_user_id uuid;
 BEGIN
-  -- Get user ID
   SELECT id INTO v_user_id FROM auth.users WHERE email = v_user_email;
-
   IF v_user_id IS NOT NULL THEN
-    -- Insert admin role if it doesn't exist
     IF NOT EXISTS (SELECT 1 FROM public.user_roles WHERE user_id = v_user_id AND role = 'admin') THEN
-      INSERT INTO public.user_roles (user_id, role)
-      VALUES (v_user_id, 'admin');
-      RAISE NOTICE 'Admin role applied for user: %', v_user_email;
-    ELSE
-      RAISE NOTICE 'User % already has admin role', v_user_email;
+      INSERT INTO public.user_roles (user_id, role) VALUES (v_user_id, 'admin');
     END IF;
-  ELSE
-    RAISE WARNING 'User with email % not found', v_user_email;
   END IF;
 END $$;
 
--- 2. Refine Delivery Settings Policies
+
+-- 4. Set/Refine Policies
+-- Delivery settings
 DROP POLICY IF EXISTS "Delivery settings viewable by everyone" ON public.delivery_settings;
 DROP POLICY IF EXISTS "Admins can manage delivery settings" ON public.delivery_settings;
+CREATE POLICY "Delivery settings viewable by everyone" ON public.delivery_settings FOR SELECT USING (true);
+CREATE POLICY "Admins can manage delivery settings" ON public.delivery_settings FOR ALL TO authenticated USING (public.has_role(auth.uid(), 'admin'));
 
-CREATE POLICY "Delivery settings viewable by everyone" 
-  ON public.delivery_settings FOR SELECT 
-  USING (true);
+-- Email templates
+DROP POLICY IF EXISTS "Admins can manage email templates" ON public.email_templates;
+DROP POLICY IF EXISTS "Email templates readable by service role" ON public.email_templates;
+CREATE POLICY "Admins can manage email templates" ON public.email_templates FOR ALL TO authenticated USING (public.has_role(auth.uid(), 'admin'));
+CREATE POLICY "Email templates readable by everyone" ON public.email_templates FOR SELECT USING (true);
 
-CREATE POLICY "Admins can manage delivery settings" 
-  ON public.delivery_settings 
-  FOR ALL 
-  TO authenticated 
-  USING (public.has_role(auth.uid(), 'admin'));
+-- Drivers (Admin should see all)
+DROP POLICY IF EXISTS "Admins can view all drivers" ON public.drivers;
+CREATE POLICY "Admins can view all drivers" ON public.drivers FOR SELECT TO authenticated USING (public.has_role(auth.uid(), 'admin'));
 
--- Ensure at least one row exists for delivery_settings
+
+-- 5. Insert Default Data
+-- Default delivery settings
 INSERT INTO public.delivery_settings (base_price, price_per_km, min_order_amount)
 SELECT 10.00, 2.00, 20.00
 WHERE NOT EXISTS (SELECT 1 FROM public.delivery_settings);
-
-
--- 3. Refine Email Templates Policies
-DROP POLICY IF EXISTS "Admins can manage email templates" ON public.email_templates;
-DROP POLICY IF EXISTS "Email templates readable by service role" ON public.email_templates;
-
--- Allow admins to do everything
-CREATE POLICY "Admins can manage email templates" 
-  ON public.email_templates 
-  FOR ALL 
-  TO authenticated 
-  USING (public.has_role(auth.uid(), 'admin'));
 
 -- Default email template
 INSERT INTO public.email_templates (template_key, subject_template, header_text, footer_text, footer_text_en)
 SELECT 'order_status', 'تحديث طلبك #{order_id} - {status}', 'وصلني - Waslni', 'شكراً لاستخدامك وصلني', 'Thank you for using Waslni'
 WHERE NOT EXISTS (SELECT 1 FROM public.email_templates WHERE template_key = 'order_status');
-
-
--- 4. Fix Drivers View Policy
-DROP POLICY IF EXISTS "Admins can view all drivers" ON public.drivers;
-
-CREATE POLICY "Admins can view all drivers" 
-  ON public.drivers 
-  FOR SELECT 
-  TO authenticated 
-  USING (public.has_role(auth.uid(), 'admin'));
