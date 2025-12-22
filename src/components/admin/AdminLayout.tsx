@@ -1,21 +1,23 @@
-import { useEffect } from 'react';
-import { Outlet, useNavigate } from 'react-router-dom';
-import { SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar';
-import { AdminSidebar } from './AdminSidebar';
-import { useAuth } from '@/hooks/useAuth';
-import { useOrderNotifications } from '@/hooks/useOrderNotifications';
-import { Loader2 } from 'lucide-react';
+import { useEffect } from "react";
+import { Outlet, useNavigate } from "react-router-dom";
+import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
+import { AdminSidebar } from "./AdminSidebar";
+import { useAuth } from "@/hooks/useAuth";
+import { useOrderNotifications } from "@/hooks/useOrderNotifications";
+import { Loader2 } from "lucide-react";
+import { UserMenu } from "./UserMenu";
+import { NotificationsPopover } from "./NotificationsPopover";
 
 export function AdminLayout() {
   const { user, loading, userRole } = useAuth();
   const navigate = useNavigate();
-  
+
   // Subscribe to real-time order notifications
   useOrderNotifications();
 
   useEffect(() => {
     if (!loading && !user) {
-      navigate('/auth');
+      navigate("/auth");
     }
   }, [user, loading, navigate]);
 
@@ -39,9 +41,10 @@ export function AdminLayout() {
           <header className="h-14 border-b bg-card flex items-center px-4 gap-4">
             <SidebarTrigger />
             <div className="flex-1" />
-            <span className="text-sm text-muted-foreground">
-              {userRole === 'admin' ? 'مدير' : 'مستخدم'}
-            </span>
+            <div className="flex items-center gap-2">
+              <NotificationsPopover />
+              <UserMenu />
+            </div>
           </header>
           <div className="flex-1 p-6 overflow-auto">
             <Outlet />
