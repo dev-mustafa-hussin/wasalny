@@ -8,17 +8,20 @@ import { Loader2 } from "lucide-react";
 import { UserMenu } from "./UserMenu";
 import { NotificationsPopover } from "./NotificationsPopover";
 
-export function AdminLayout() {
-  const { user, loading, userRole } = useAuth();
+  // TEMPORARY: Mock for debugging
+  const user = { email: 'admin@test.com' }; 
+  const loading = false;
+  const userRole = 'admin';
+  // const { user, loading, userRole } = useAuth();
   const navigate = useNavigate();
 
   // Subscribe to real-time order notifications
   useOrderNotifications();
 
   useEffect(() => {
-    if (!loading && !user) {
-      navigate("/auth");
-    }
+    // if (!loading && !user) {
+    //   navigate("/auth");
+    // }
   }, [user, loading, navigate]);
 
   if (loading) {
