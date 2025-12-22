@@ -8,10 +8,10 @@ import { Loader2 } from "lucide-react";
 import { UserMenu } from "./UserMenu";
 import { NotificationsPopover } from "./NotificationsPopover";
 
+export function AdminLayout() {
   // TEMPORARY: Mock for debugging
-  const user = { email: 'admin@test.com' }; 
+  const user = { email: "admin@test.com" };
   const loading = false;
-  const userRole = 'admin';
   // const { user, loading, userRole } = useAuth();
   const navigate = useNavigate();
 
