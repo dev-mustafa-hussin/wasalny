@@ -1,12 +1,18 @@
-import { useEffect, useState } from 'react';
-import { supabase } from '@/integrations/supabase/client';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Switch } from '@/components/ui/switch';
-import { useToast } from '@/hooks/use-toast';
-import { Settings as SettingsIcon, Save, Bell } from 'lucide-react';
+import { useEffect, useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Switch } from "@/components/ui/switch";
+import { useToast } from "@/hooks/use-toast";
+import { Settings as SettingsIcon, Save, Bell } from "lucide-react";
 
 interface DeliverySettings {
   id: string;
@@ -20,22 +26,22 @@ export default function Settings() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [soundEnabled, setSoundEnabled] = useState(() => {
-    const stored = localStorage.getItem('orderSoundNotifications');
-    return stored !== 'false';
+    const stored = localStorage.getItem("orderSoundNotifications");
+    return stored !== "false";
   });
   const [pushEnabled, setPushEnabled] = useState(() => {
-    const stored = localStorage.getItem('orderPushNotifications');
-    return stored !== 'false';
+    const stored = localStorage.getItem("orderPushNotifications");
+    return stored !== "false";
   });
   const [pushPermission, setPushPermission] = useState<NotificationPermission>(
-    'Notification' in window ? Notification.permission : 'denied'
+    "Notification" in window ? Notification.permission : "denied"
   );
   const { toast } = useToast();
 
   const [formData, setFormData] = useState({
-    base_price: '',
-    price_per_km: '',
-    min_order_amount: '',
+    base_price: "",
+    price_per_km: "",
+    min_order_amount: "",
   });
 
   useEffect(() => {
@@ -44,19 +50,23 @@ export default function Settings() {
 
   const fetchSettings = async () => {
     const { data, error } = await supabase
-      .from('delivery_settings')
-      .select('*')
+      .from("delivery_settings")
+      .select("*")
       .limit(1)
       .maybeSingle();
 
     if (error) {
-      toast({ title: 'خطأ', description: 'فشل في تحميل الإعدادات', variant: 'destructive' });
+      toast({
+        title: "خطأ",
+        description: "فشل في تحميل الإعدادات",
+        variant: "destructive",
+      });
     } else if (data) {
       setSettings(data);
       setFormData({
-        base_price: data.base_price?.toString() || '10',
-        price_per_km: data.price_per_km?.toString() || '2',
-        min_order_amount: data.min_order_amount?.toString() || '20',
+        base_price: data.base_price?.toString() || "10",
+        price_per_km: data.price_per_km?.toString() || "2",
+        min_order_amount: data.min_order_amount?.toString() || "20",
       });
     }
     setLoading(false);
@@ -74,14 +84,33 @@ export default function Settings() {
 
     if (settings?.id) {
       const { error } = await supabase
-        .from('delivery_settings')
+        .from("delivery_settings")
         .update(updateData)
-        .eq('id', settings.id);
+        .eq("id", settings.id);
 
       if (error) {
-        toast({ title: 'خطأ', description: 'فشل في حفظ الإعدادات', variant: 'destructive' });
+        toast({
+          title: "خطأ",
+          description: "فشل في حفظ الإعدادات",
+          variant: "destructive",
+        });
       } else {
-        toast({ title: 'تم', description: 'تم حفظ الإعدادات بنجاح' });
+        toast({ title: "تم", description: "تم حفظ الإعدادات بنجاح" });
+      }
+    } else {
+      const { error } = await supabase
+        .from("delivery_settings")
+        .insert([updateData]);
+
+      if (error) {
+        toast({
+          title: "خطأ",
+          description: "فشل في إنشاء الإعدادات",
+          variant: "destructive",
+        });
+      } else {
+        toast({ title: "تم", description: "تم إنشاء الإعدادات بنجاح" });
+        fetchSettings(); // Reload to get the new ID
       }
     }
 
@@ -117,7 +146,9 @@ export default function Settings() {
                   step="0.01"
                   min="0"
                   value={formData.base_price}
-                  onChange={(e) => setFormData({ ...formData, base_price: e.target.value })}
+                  onChange={(e) =>
+                    setFormData({ ...formData, base_price: e.target.value })
+                  }
                   required
                 />
                 <p className="text-xs text-muted-foreground">
@@ -131,7 +162,9 @@ export default function Settings() {
                   step="0.01"
                   min="0"
                   value={formData.price_per_km}
-                  onChange={(e) => setFormData({ ...formData, price_per_km: e.target.value })}
+                  onChange={(e) =>
+                    setFormData({ ...formData, price_per_km: e.target.value })
+                  }
                   required
                 />
                 <p className="text-xs text-muted-foreground">
@@ -145,7 +178,12 @@ export default function Settings() {
                   step="0.01"
                   min="0"
                   value={formData.min_order_amount}
-                  onChange={(e) => setFormData({ ...formData, min_order_amount: e.target.value })}
+                  onChange={(e) =>
+                    setFormData({
+                      ...formData,
+                      min_order_amount: e.target.value,
+                    })
+                  }
                   required
                 />
                 <p className="text-xs text-muted-foreground">
@@ -155,7 +193,7 @@ export default function Settings() {
             </div>
             <Button type="submit" disabled={saving}>
               <Save className="h-4 w-4 ml-2" />
-              {saving ? 'جاري الحفظ...' : 'حفظ الإعدادات'}
+              {saving ? "جاري الحفظ..." : "حفظ الإعدادات"}
             </Button>
           </form>
         </CardContent>
@@ -181,9 +219,14 @@ export default function Settings() {
               checked={soundEnabled}
               onCheckedChange={(checked) => {
                 setSoundEnabled(checked);
-                localStorage.setItem('orderSoundNotifications', String(checked));
+                localStorage.setItem(
+                  "orderSoundNotifications",
+                  String(checked)
+                );
                 toast({
-                  title: checked ? 'تم تفعيل الإشعارات الصوتية' : 'تم إيقاف الإشعارات الصوتية',
+                  title: checked
+                    ? "تم تفعيل الإشعارات الصوتية"
+                    : "تم إيقاف الإشعارات الصوتية",
                 });
               }}
             />
@@ -195,32 +238,34 @@ export default function Settings() {
               <p className="text-sm text-muted-foreground">
                 عرض إشعار في المتصفح عند وصول طلب جديد
               </p>
-              {pushPermission === 'denied' && (
+              {pushPermission === "denied" && (
                 <p className="text-xs text-destructive">
                   تم حظر الإشعارات. يرجى السماح بها من إعدادات المتصفح.
                 </p>
               )}
             </div>
             <Switch
-              checked={pushEnabled && pushPermission === 'granted'}
-              disabled={pushPermission === 'denied'}
+              checked={pushEnabled && pushPermission === "granted"}
+              disabled={pushPermission === "denied"}
               onCheckedChange={async (checked) => {
-                if (checked && pushPermission !== 'granted') {
+                if (checked && pushPermission !== "granted") {
                   const permission = await Notification.requestPermission();
                   setPushPermission(permission);
-                  if (permission !== 'granted') {
+                  if (permission !== "granted") {
                     toast({
-                      title: 'لم يتم السماح بالإشعارات',
-                      description: 'يرجى السماح بالإشعارات من إعدادات المتصفح',
-                      variant: 'destructive',
+                      title: "لم يتم السماح بالإشعارات",
+                      description: "يرجى السماح بالإشعارات من إعدادات المتصفح",
+                      variant: "destructive",
                     });
                     return;
                   }
                 }
                 setPushEnabled(checked);
-                localStorage.setItem('orderPushNotifications', String(checked));
+                localStorage.setItem("orderPushNotifications", String(checked));
                 toast({
-                  title: checked ? 'تم تفعيل إشعارات المتصفح' : 'تم إيقاف إشعارات المتصفح',
+                  title: checked
+                    ? "تم تفعيل إشعارات المتصفح"
+                    : "تم إيقاف إشعارات المتصفح",
                 });
               }}
             />
@@ -233,9 +278,15 @@ export default function Settings() {
           <CardTitle>معلومات التطبيق</CardTitle>
         </CardHeader>
         <CardContent className="space-y-2 text-sm text-muted-foreground">
-          <p><strong>اسم التطبيق:</strong> وصلني</p>
-          <p><strong>الإصدار:</strong> 1.0.0</p>
-          <p><strong>النوع:</strong> تطبيق توصيل (مطاعم + أسواق)</p>
+          <p>
+            <strong>اسم التطبيق:</strong> وصلني
+          </p>
+          <p>
+            <strong>الإصدار:</strong> 1.0.0
+          </p>
+          <p>
+            <strong>النوع:</strong> تطبيق توصيل (مطاعم + أسواق)
+          </p>
         </CardContent>
       </Card>
     </div>
