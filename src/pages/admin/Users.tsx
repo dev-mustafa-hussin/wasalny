@@ -15,6 +15,22 @@ import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Search, Shield, Ban, CheckCircle } from "lucide-react";
 import { toast } from "sonner";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Edit } from "lucide-react";
 
 interface UserProfile {
   id: string; // profile id
@@ -69,6 +85,39 @@ export default function Users() {
       toast.error("فشل في تحميل المستخدمين");
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleUpdateRole = async (userId: string, newRole: string) => {
+    try {
+      // Check if role entry exists
+      const { data: existingRole } = await supabase
+        .from("user_roles")
+        .select("*")
+        .eq("user_id", userId)
+        .maybeSingle();
+
+      let error;
+      if (existingRole) {
+        const { error: updateError } = await supabase
+          .from("user_roles")
+          .update({ role: newRole })
+          .eq("user_id", userId);
+        error = updateError;
+      } else {
+        const { error: insertError } = await supabase
+          .from("user_roles")
+          .insert({ user_id: userId, role: newRole });
+        error = insertError;
+      }
+
+      if (error) throw error;
+
+      toast.success("تم تحديث الدور بنجاح");
+      fetchUsers();
+    } catch (err: any) {
+      console.error("Error updating role:", err);
+      toast.error("فشل في تحديث الدور");
     }
   };
 
@@ -151,19 +200,62 @@ export default function Users() {
                       </div>
                     </TableCell>
                     <TableCell>
-                      <Badge
-                        variant="outline"
-                        className="flex w-fit items-center gap-1"
-                      >
-                        <Shield className="w-3 h-3" />
-                        {user.role === "admin"
-                          ? "مدير النظام"
-                          : user.role === "driver"
-                          ? "مندوب"
-                          : user.role === "store_owner"
-                          ? "تاجـر"
-                          : "عميل"}
-                      </Badge>
+                      <div className="flex items-center gap-2">
+                        <Badge
+                          variant="outline"
+                          className="flex w-fit items-center gap-1"
+                        >
+                          <Shield className="w-3 h-3" />
+                          {user.role === "admin"
+                            ? "مدير النظام"
+                            : user.role === "driver"
+                            ? "مندوب"
+                            : user.role === "store_owner"
+                            ? "تاجـر"
+                            : "عميل"}
+                        </Badge>
+                        <Dialog>
+                          <DialogTrigger asChild>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-6 w-6"
+                            >
+                              <Edit className="h-4 w-4" />
+                            </Button>
+                          </DialogTrigger>
+                          <DialogContent>
+                            <DialogHeader>
+                              <DialogTitle>تغيير دور المستخدم</DialogTitle>
+                              <DialogDescription>
+                                اختر الدور الجديد للمستخدم {user.full_name}
+                              </DialogDescription>
+                            </DialogHeader>
+                            <div className="grid gap-4 py-4">
+                              <Select
+                                defaultValue={user.role || "customer"}
+                                onValueChange={(value) =>
+                                  handleUpdateRole(user.user_id, value)
+                                }
+                              >
+                                <SelectTrigger>
+                                  <SelectValue placeholder="اختر الدور" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  <SelectItem value="customer">عميل</SelectItem>
+                                  <SelectItem value="driver">مندوب</SelectItem>
+                                  <SelectItem value="store_owner">
+                                    تاجر
+                                  </SelectItem>
+                                  <SelectItem value="admin">
+                                    مدير النظام
+                                  </SelectItem>
+                                </SelectContent>
+                              </Select>
+                            </div>
+                          </DialogContent>
+                        </Dialog>
+                      </div>
                     </TableCell>
                     <TableCell>
                       {new Date(user.created_at).toLocaleDateString("ar-SA")}
@@ -208,6 +300,8 @@ export default function Users() {
           </Table>
         </CardContent>
       </Card>
+
+      {/* Hidden Dialog purely for shadcn structure if needed, but we used inline Dialogs above */}
     </div>
   );
 }
