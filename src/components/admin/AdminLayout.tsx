@@ -9,20 +9,16 @@ import { UserMenu } from "./UserMenu";
 import { NotificationsPopover } from "./NotificationsPopover";
 
 export function AdminLayout() {
-  // TEMPORARY: Mock for verification
-  const user = { email: "admin@test.com" };
-  const loading = false;
-  const userRole = "admin";
-  // const { user, loading, userRole } = useAuth();
+  const { user, loading, userRole } = useAuth();
   const navigate = useNavigate();
 
   // Subscribe to real-time order notifications
   useOrderNotifications();
 
   useEffect(() => {
-    // if (!loading && !user) {
-    //   navigate("/auth");
-    // }
+    if (!loading && !user) {
+      navigate("/auth");
+    }
   }, [user, loading, navigate]);
 
   if (loading) {
