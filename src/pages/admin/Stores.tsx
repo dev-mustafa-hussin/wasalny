@@ -1,17 +1,29 @@
-import { useEffect, useState } from 'react';
-import { supabase } from '@/integrations/supabase/client';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Textarea } from '@/components/ui/textarea';
-import { Switch } from '@/components/ui/switch';
-import { useToast } from '@/hooks/use-toast';
-import { Plus, Pencil, Trash2, Store, MapPin, Phone } from 'lucide-react';
-import { Badge } from '@/components/ui/badge';
-import { ImageUpload } from '@/components/admin/ImageUpload';
+import { useEffect, useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Textarea } from "@/components/ui/textarea";
+import { Switch } from "@/components/ui/switch";
+import { useToast } from "@/hooks/use-toast";
+import { Plus, Pencil, Trash2, Store, MapPin, Phone } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { ImageUpload } from "@/components/admin/ImageUpload";
 
 interface StoreType {
   id: string;
@@ -31,23 +43,23 @@ export default function Stores() {
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingStore, setEditingStore] = useState<StoreType | null>(null);
-  const [searchQuery, setSearchQuery] = useState('');
+  const [searchQuery, setSearchQuery] = useState("");
   const { toast } = useToast();
 
-  const filteredStores = stores.filter(store => 
+  const filteredStores = stores.filter((store) =>
     store.name.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
   const [formData, setFormData] = useState({
-    name: '',
-    description: '',
-    type: 'restaurant',
-    image_url: '',
-    address: '',
-    phone: '',
+    name: "",
+    description: "",
+    type: "restaurant",
+    image_url: "",
+    address: "",
+    phone: "",
     is_active: true,
-    opening_time: '',
-    closing_time: '',
+    opening_time: "",
+    closing_time: "",
   });
 
   useEffect(() => {
@@ -56,12 +68,16 @@ export default function Stores() {
 
   const fetchStores = async () => {
     const { data, error } = await supabase
-      .from('stores')
-      .select('*')
-      .order('created_at', { ascending: false });
+      .from("stores")
+      .select("*")
+      .order("created_at", { ascending: false });
 
     if (error) {
-      toast({ title: 'خطأ', description: 'فشل في تحميل المتاجر', variant: 'destructive' });
+      toast({
+        title: "خطأ",
+        description: "فشل في تحميل المتاجر",
+        variant: "destructive",
+      });
     } else {
       setStores(data || []);
     }
@@ -70,15 +86,15 @@ export default function Stores() {
 
   const resetForm = () => {
     setFormData({
-      name: '',
-      description: '',
-      type: 'restaurant',
-      image_url: '',
-      address: '',
-      phone: '',
+      name: "",
+      description: "",
+      type: "restaurant",
+      image_url: "",
+      address: "",
+      phone: "",
       is_active: true,
-      opening_time: '',
-      closing_time: '',
+      opening_time: "",
+      closing_time: "",
     });
     setEditingStore(null);
   };
@@ -88,14 +104,14 @@ export default function Stores() {
       setEditingStore(store);
       setFormData({
         name: store.name,
-        description: store.description || '',
+        description: store.description || "",
         type: store.type,
-        image_url: store.image_url || '',
-        address: store.address || '',
-        phone: store.phone || '',
+        image_url: store.image_url || "",
+        address: store.address || "",
+        phone: store.phone || "",
         is_active: store.is_active,
-        opening_time: store.opening_time || '',
-        closing_time: store.closing_time || '',
+        opening_time: store.opening_time || "",
+        closing_time: store.closing_time || "",
       });
     } else {
       resetForm();
@@ -105,7 +121,7 @@ export default function Stores() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     const storeData = {
       name: formData.name,
       description: formData.description || null,
@@ -120,22 +136,30 @@ export default function Stores() {
 
     if (editingStore) {
       const { error } = await supabase
-        .from('stores')
+        .from("stores")
         .update(storeData)
-        .eq('id', editingStore.id);
+        .eq("id", editingStore.id);
 
       if (error) {
-        toast({ title: 'خطأ', description: 'فشل في تحديث المتجر', variant: 'destructive' });
+        toast({
+          title: "خطأ",
+          description: "فشل في تحديث المتجر",
+          variant: "destructive",
+        });
       } else {
-        toast({ title: 'تم', description: 'تم تحديث المتجر بنجاح' });
+        toast({ title: "تم", description: "تم تحديث المتجر بنجاح" });
       }
     } else {
-      const { error } = await supabase.from('stores').insert(storeData);
+      const { error } = await supabase.from("stores").insert(storeData);
 
       if (error) {
-        toast({ title: 'خطأ', description: 'فشل في إضافة المتجر', variant: 'destructive' });
+        toast({
+          title: "خطأ",
+          description: "فشل في إضافة المتجر",
+          variant: "destructive",
+        });
       } else {
-        toast({ title: 'تم', description: 'تم إضافة المتجر بنجاح' });
+        toast({ title: "تم", description: "تم إضافة المتجر بنجاح" });
       }
     }
 
@@ -145,14 +169,18 @@ export default function Stores() {
   };
 
   const handleDelete = async (id: string) => {
-    if (!confirm('هل أنت متأكد من حذف هذا المتجر؟')) return;
+    if (!confirm("هل أنت متأكد من حذف هذا المتجر؟")) return;
 
-    const { error } = await supabase.from('stores').delete().eq('id', id);
+    const { error } = await supabase.from("stores").delete().eq("id", id);
 
     if (error) {
-      toast({ title: 'خطأ', description: 'فشل في حذف المتجر', variant: 'destructive' });
+      toast({
+        title: "خطأ",
+        description: "فشل في حذف المتجر",
+        variant: "destructive",
+      });
     } else {
-      toast({ title: 'تم', description: 'تم حذف المتجر بنجاح' });
+      toast({ title: "تم", description: "تم حذف المتجر بنجاح" });
       fetchStores();
     }
   };
@@ -172,97 +200,128 @@ export default function Stores() {
             className="w-64"
           />
           <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-          <DialogTrigger asChild>
-            <Button onClick={() => handleOpenDialog()}>
-              <Plus className="h-4 w-4 ml-2" />
-              إضافة متجر
-            </Button>
-          </DialogTrigger>
-          <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto" dir="rtl">
-            <DialogHeader>
-              <DialogTitle>{editingStore ? 'تعديل المتجر' : 'إضافة متجر جديد'}</DialogTitle>
-            </DialogHeader>
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div className="space-y-2">
-                <Label>اسم المتجر</Label>
-                <Input
-                  value={formData.name}
-                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                  required
-                />
-              </div>
-              <div className="space-y-2">
-                <Label>النوع</Label>
-                <Select value={formData.type} onValueChange={(v) => setFormData({ ...formData, type: v })}>
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="restaurant">مطعم</SelectItem>
-                    <SelectItem value="market">سوق</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="space-y-2">
-                <Label>الوصف</Label>
-                <Textarea
-                  value={formData.description}
-                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label>صورة المتجر</Label>
-                <ImageUpload
-                  value={formData.image_url}
-                  onChange={(url) => setFormData({ ...formData, image_url: url || '' })}
-                  folder="stores"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label>العنوان</Label>
-                <Input
-                  value={formData.address}
-                  onChange={(e) => setFormData({ ...formData, address: e.target.value })}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label>رقم الهاتف</Label>
-                <Input
-                  value={formData.phone}
-                  onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                />
-              </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label>وقت الفتح</Label>
-                  <Input
-                    type="time"
-                    value={formData.opening_time}
-                    onChange={(e) => setFormData({ ...formData, opening_time: e.target.value })}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label>وقت الإغلاق</Label>
-                  <Input
-                    type="time"
-                    value={formData.closing_time}
-                    onChange={(e) => setFormData({ ...formData, closing_time: e.target.value })}
-                  />
-                </div>
-              </div>
-              <div className="flex items-center justify-between">
-                <Label>نشط</Label>
-                <Switch
-                  checked={formData.is_active}
-                  onCheckedChange={(v) => setFormData({ ...formData, is_active: v })}
-                />
-              </div>
-              <Button type="submit" className="w-full">
-                {editingStore ? 'تحديث' : 'إضافة'}
+            <DialogTrigger asChild>
+              <Button onClick={() => handleOpenDialog()}>
+                <Plus className="h-4 w-4 ml-2" />
+                إضافة متجر
               </Button>
-            </form>
-          </DialogContent>
-        </Dialog>
+            </DialogTrigger>
+            <DialogContent
+              className="max-w-md max-h-[90vh] overflow-y-auto"
+              dir="rtl"
+            >
+              <DialogHeader>
+                <DialogTitle>
+                  {editingStore ? "تعديل المتجر" : "إضافة متجر جديد"}
+                </DialogTitle>
+              </DialogHeader>
+              <form onSubmit={handleSubmit} className="space-y-4">
+                <div className="space-y-2">
+                  <Label>اسم المتجر</Label>
+                  <Input
+                    value={formData.name}
+                    onChange={(e) =>
+                      setFormData({ ...formData, name: e.target.value })
+                    }
+                    required
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>النوع</Label>
+                  <Select
+                    value={formData.type}
+                    onValueChange={(v) => setFormData({ ...formData, type: v })}
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="restaurant">مطعم</SelectItem>
+                      <SelectItem value="market">سوق</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <Label>الوصف</Label>
+                  <Textarea
+                    value={formData.description}
+                    onChange={(e) =>
+                      setFormData({ ...formData, description: e.target.value })
+                    }
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>صورة المتجر</Label>
+                  <ImageUpload
+                    value={formData.image_url}
+                    onChange={(url) =>
+                      setFormData({ ...formData, image_url: url || "" })
+                    }
+                    folder="stores"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>العنوان</Label>
+                  <Input
+                    value={formData.address}
+                    onChange={(e) =>
+                      setFormData({ ...formData, address: e.target.value })
+                    }
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>رقم الهاتف</Label>
+                  <Input
+                    value={formData.phone}
+                    onChange={(e) =>
+                      setFormData({ ...formData, phone: e.target.value })
+                    }
+                  />
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label>وقت الفتح</Label>
+                    <Input
+                      type="time"
+                      value={formData.opening_time}
+                      onChange={(e) =>
+                        setFormData({
+                          ...formData,
+                          opening_time: e.target.value,
+                        })
+                      }
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>وقت الإغلاق</Label>
+                    <Input
+                      type="time"
+                      value={formData.closing_time}
+                      onChange={(e) =>
+                        setFormData({
+                          ...formData,
+                          closing_time: e.target.value,
+                        })
+                      }
+                    />
+                  </div>
+                </div>
+                <div className="flex items-center justify-between">
+                  <Label>نشط</Label>
+                  <Switch
+                    checked={formData.is_active}
+                    onCheckedChange={(v) =>
+                      setFormData({ ...formData, is_active: v })
+                    }
+                  />
+                </div>
+                <Button type="submit" className="w-full">
+                  {editingStore ? "تحديث" : "إضافة"}
+                </Button>
+              </form>
+            </DialogContent>
+          </Dialog>
+        </div>
       </div>
 
       {loading ? (
@@ -293,11 +352,15 @@ export default function Stores() {
                   <div>
                     <CardTitle className="text-lg">{store.name}</CardTitle>
                     <div className="flex gap-2 mt-1">
-                      <Badge variant={store.type === 'restaurant' ? 'default' : 'secondary'}>
-                        {store.type === 'restaurant' ? 'مطعم' : 'سوق'}
+                      <Badge
+                        variant={
+                          store.type === "restaurant" ? "default" : "secondary"
+                        }
+                      >
+                        {store.type === "restaurant" ? "مطعم" : "سوق"}
                       </Badge>
-                      <Badge variant={store.is_active ? 'default' : 'outline'}>
-                        {store.is_active ? 'نشط' : 'معطل'}
+                      <Badge variant={store.is_active ? "default" : "outline"}>
+                        {store.is_active ? "نشط" : "معطل"}
                       </Badge>
                     </div>
                   </div>
@@ -305,7 +368,9 @@ export default function Stores() {
               </CardHeader>
               <CardContent className="space-y-2">
                 {store.description && (
-                  <p className="text-sm text-muted-foreground line-clamp-2">{store.description}</p>
+                  <p className="text-sm text-muted-foreground line-clamp-2">
+                    {store.description}
+                  </p>
                 )}
                 {store.address && (
                   <div className="flex items-center gap-2 text-sm text-muted-foreground">
@@ -320,11 +385,19 @@ export default function Stores() {
                   </div>
                 )}
                 <div className="flex gap-2 pt-2">
-                  <Button variant="outline" size="sm" onClick={() => handleOpenDialog(store)}>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => handleOpenDialog(store)}
+                  >
                     <Pencil className="h-4 w-4 ml-1" />
                     تعديل
                   </Button>
-                  <Button variant="destructive" size="sm" onClick={() => handleDelete(store.id)}>
+                  <Button
+                    variant="destructive"
+                    size="sm"
+                    onClick={() => handleDelete(store.id)}
+                  >
                     <Trash2 className="h-4 w-4 ml-1" />
                     حذف
                   </Button>

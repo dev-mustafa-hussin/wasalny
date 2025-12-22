@@ -1,17 +1,29 @@
-import { useEffect, useState } from 'react';
-import { supabase } from '@/integrations/supabase/client';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Textarea } from '@/components/ui/textarea';
-import { Switch } from '@/components/ui/switch';
-import { useToast } from '@/hooks/use-toast';
-import { Plus, Pencil, Trash2, Package } from 'lucide-react';
-import { Badge } from '@/components/ui/badge';
-import { ImageUpload } from '@/components/admin/ImageUpload';
+import { useEffect, useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Textarea } from "@/components/ui/textarea";
+import { Switch } from "@/components/ui/switch";
+import { useToast } from "@/hooks/use-toast";
+import { Plus, Pencil, Trash2, Package } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { ImageUpload } from "@/components/admin/ImageUpload";
 
 interface Product {
   id: string;
@@ -37,19 +49,19 @@ export default function Products() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const { toast } = useToast();
-  const [searchQuery, setSearchQuery] = useState('');
+  const [searchQuery, setSearchQuery] = useState("");
 
-  const filteredProducts = products.filter(product => 
+  const filteredProducts = products.filter((product) =>
     product.name.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
   const [formData, setFormData] = useState({
-    name: '',
-    description: '',
-    price: '',
-    image_url: '',
+    name: "",
+    description: "",
+    price: "",
+    image_url: "",
     is_available: true,
-    store_id: '',
+    store_id: "",
   });
 
   useEffect(() => {
@@ -59,12 +71,16 @@ export default function Products() {
 
   const fetchProducts = async () => {
     const { data, error } = await supabase
-      .from('products')
-      .select('*, stores(name)')
-      .order('created_at', { ascending: false });
+      .from("products")
+      .select("*, stores(name)")
+      .order("created_at", { ascending: false });
 
     if (error) {
-      toast({ title: 'خطأ', description: 'فشل في تحميل المنتجات', variant: 'destructive' });
+      toast({
+        title: "خطأ",
+        description: "فشل في تحميل المنتجات",
+        variant: "destructive",
+      });
     } else {
       setProducts(data || []);
     }
@@ -72,18 +88,21 @@ export default function Products() {
   };
 
   const fetchStores = async () => {
-    const { data } = await supabase.from('stores').select('id, name').eq('is_active', true);
+    const { data } = await supabase
+      .from("stores")
+      .select("id, name")
+      .eq("is_active", true);
     setStores(data || []);
   };
 
   const resetForm = () => {
     setFormData({
-      name: '',
-      description: '',
-      price: '',
-      image_url: '',
+      name: "",
+      description: "",
+      price: "",
+      image_url: "",
       is_available: true,
-      store_id: '',
+      store_id: "",
     });
     setEditingProduct(null);
   };
@@ -93,9 +112,9 @@ export default function Products() {
       setEditingProduct(product);
       setFormData({
         name: product.name,
-        description: product.description || '',
+        description: product.description || "",
         price: product.price.toString(),
-        image_url: product.image_url || '',
+        image_url: product.image_url || "",
         is_available: product.is_available,
         store_id: product.store_id,
       });
@@ -107,7 +126,7 @@ export default function Products() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     const productData = {
       name: formData.name,
       description: formData.description || null,
@@ -119,22 +138,30 @@ export default function Products() {
 
     if (editingProduct) {
       const { error } = await supabase
-        .from('products')
+        .from("products")
         .update(productData)
-        .eq('id', editingProduct.id);
+        .eq("id", editingProduct.id);
 
       if (error) {
-        toast({ title: 'خطأ', description: 'فشل في تحديث المنتج', variant: 'destructive' });
+        toast({
+          title: "خطأ",
+          description: "فشل في تحديث المنتج",
+          variant: "destructive",
+        });
       } else {
-        toast({ title: 'تم', description: 'تم تحديث المنتج بنجاح' });
+        toast({ title: "تم", description: "تم تحديث المنتج بنجاح" });
       }
     } else {
-      const { error } = await supabase.from('products').insert(productData);
+      const { error } = await supabase.from("products").insert(productData);
 
       if (error) {
-        toast({ title: 'خطأ', description: 'فشل في إضافة المنتج', variant: 'destructive' });
+        toast({
+          title: "خطأ",
+          description: "فشل في إضافة المنتج",
+          variant: "destructive",
+        });
       } else {
-        toast({ title: 'تم', description: 'تم إضافة المنتج بنجاح' });
+        toast({ title: "تم", description: "تم إضافة المنتج بنجاح" });
       }
     }
 
@@ -144,14 +171,18 @@ export default function Products() {
   };
 
   const handleDelete = async (id: string) => {
-    if (!confirm('هل أنت متأكد من حذف هذا المنتج؟')) return;
+    if (!confirm("هل أنت متأكد من حذف هذا المنتج؟")) return;
 
-    const { error } = await supabase.from('products').delete().eq('id', id);
+    const { error } = await supabase.from("products").delete().eq("id", id);
 
     if (error) {
-      toast({ title: 'خطأ', description: 'فشل في حذف المنتج', variant: 'destructive' });
+      toast({
+        title: "خطأ",
+        description: "فشل في حذف المنتج",
+        variant: "destructive",
+      });
     } else {
-      toast({ title: 'تم', description: 'تم حذف المنتج بنجاح' });
+      toast({ title: "تم", description: "تم حذف المنتج بنجاح" });
       fetchProducts();
     }
   };
@@ -164,86 +195,111 @@ export default function Products() {
           <p className="text-muted-foreground">إدارة منتجات المتاجر</p>
         </div>
         <div className="flex items-center gap-4">
-           <Input
-             placeholder="بحث عن منتج..."
-             value={searchQuery}
-             onChange={(e) => setSearchQuery(e.target.value)}
-             className="w-64"
-           />
-           <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-          <DialogTrigger asChild>
-            <Button onClick={() => handleOpenDialog()} disabled={stores.length === 0}>
-              <Plus className="h-4 w-4 ml-2" />
-              إضافة منتج
-            </Button>
-          </DialogTrigger>
-          <DialogContent className="max-w-md" dir="rtl">
-            <DialogHeader>
-              <DialogTitle>{editingProduct ? 'تعديل المنتج' : 'إضافة منتج جديد'}</DialogTitle>
-            </DialogHeader>
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div className="space-y-2">
-                <Label>المتجر</Label>
-                <Select value={formData.store_id} onValueChange={(v) => setFormData({ ...formData, store_id: v })}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="اختر المتجر" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {stores.map((store) => (
-                      <SelectItem key={store.id} value={store.id}>
-                        {store.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="space-y-2">
-                <Label>اسم المنتج</Label>
-                <Input
-                  value={formData.name}
-                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                  required
-                />
-              </div>
-              <div className="space-y-2">
-                <Label>الوصف</Label>
-                <Textarea
-                  value={formData.description}
-                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label>السعر</Label>
-                <Input
-                  type="number"
-                  step="0.01"
-                  min="0"
-                  value={formData.price}
-                  onChange={(e) => setFormData({ ...formData, price: e.target.value })}
-                  required
-                />
-              </div>
-              <div className="space-y-2">
-                <Label>صورة المنتج</Label>
-                <ImageUpload
-                  value={formData.image_url}
-                  onChange={(url) => setFormData({ ...formData, image_url: url || '' })}
-                  folder="products"
-                />
-              </div>
-              <div className="flex items-center justify-between">
-                <Label>متاح</Label>
-                <Switch
-                  checked={formData.is_available}
-                  onCheckedChange={(v) => setFormData({ ...formData, is_available: v })}
-                />
-              </div>
-              <Button type="submit" className="w-full" disabled={!formData.store_id}>
-                {editingProduct ? 'تحديث' : 'إضافة'}
+          <Input
+            placeholder="بحث عن منتج..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="w-64"
+          />
+          <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+            <DialogTrigger asChild>
+              <Button
+                onClick={() => handleOpenDialog()}
+                disabled={stores.length === 0}
+              >
+                <Plus className="h-4 w-4 ml-2" />
+                إضافة منتج
               </Button>
-            </form>
-          </DialogContent>
-        </Dialog>
+            </DialogTrigger>
+            <DialogContent className="max-w-md" dir="rtl">
+              <DialogHeader>
+                <DialogTitle>
+                  {editingProduct ? "تعديل المنتج" : "إضافة منتج جديد"}
+                </DialogTitle>
+              </DialogHeader>
+              <form onSubmit={handleSubmit} className="space-y-4">
+                <div className="space-y-2">
+                  <Label>المتجر</Label>
+                  <Select
+                    value={formData.store_id}
+                    onValueChange={(v) =>
+                      setFormData({ ...formData, store_id: v })
+                    }
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="اختر المتجر" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {stores.map((store) => (
+                        <SelectItem key={store.id} value={store.id}>
+                          {store.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <Label>اسم المنتج</Label>
+                  <Input
+                    value={formData.name}
+                    onChange={(e) =>
+                      setFormData({ ...formData, name: e.target.value })
+                    }
+                    required
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>الوصف</Label>
+                  <Textarea
+                    value={formData.description}
+                    onChange={(e) =>
+                      setFormData({ ...formData, description: e.target.value })
+                    }
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>السعر</Label>
+                  <Input
+                    type="number"
+                    step="0.01"
+                    min="0"
+                    value={formData.price}
+                    onChange={(e) =>
+                      setFormData({ ...formData, price: e.target.value })
+                    }
+                    required
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>صورة المنتج</Label>
+                  <ImageUpload
+                    value={formData.image_url}
+                    onChange={(url) =>
+                      setFormData({ ...formData, image_url: url || "" })
+                    }
+                    folder="products"
+                  />
+                </div>
+                <div className="flex items-center justify-between">
+                  <Label>متاح</Label>
+                  <Switch
+                    checked={formData.is_available}
+                    onCheckedChange={(v) =>
+                      setFormData({ ...formData, is_available: v })
+                    }
+                  />
+                </div>
+                <Button
+                  type="submit"
+                  className="w-full"
+                  disabled={!formData.store_id}
+                >
+                  {editingProduct ? "تحديث" : "إضافة"}
+                </Button>
+              </form>
+            </DialogContent>
+          </Dialog>
+        </div>
       </div>
 
       {stores.length === 0 && (
@@ -277,23 +333,37 @@ export default function Products() {
               <CardHeader className="pb-2">
                 <div className="flex items-start justify-between">
                   <CardTitle className="text-base">{product.name}</CardTitle>
-                  <Badge variant={product.is_available ? 'default' : 'outline'}>
-                    {product.is_available ? 'متاح' : 'غير متاح'}
+                  <Badge variant={product.is_available ? "default" : "outline"}>
+                    {product.is_available ? "متاح" : "غير متاح"}
                   </Badge>
                 </div>
-                <p className="text-sm text-muted-foreground">{product.stores?.name}</p>
+                <p className="text-sm text-muted-foreground">
+                  {product.stores?.name}
+                </p>
               </CardHeader>
               <CardContent className="space-y-2">
                 {product.description && (
-                  <p className="text-sm text-muted-foreground line-clamp-2">{product.description}</p>
+                  <p className="text-sm text-muted-foreground line-clamp-2">
+                    {product.description}
+                  </p>
                 )}
-                <p className="text-lg font-bold text-primary">{product.price} ر.س</p>
+                <p className="text-lg font-bold text-primary">
+                  {product.price} ر.س
+                </p>
                 <div className="flex gap-2 pt-2">
-                  <Button variant="outline" size="sm" onClick={() => handleOpenDialog(product)}>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => handleOpenDialog(product)}
+                  >
                     <Pencil className="h-4 w-4 ml-1" />
                     تعديل
                   </Button>
-                  <Button variant="destructive" size="sm" onClick={() => handleDelete(product.id)}>
+                  <Button
+                    variant="destructive"
+                    size="sm"
+                    onClick={() => handleDelete(product.id)}
+                  >
                     <Trash2 className="h-4 w-4 ml-1" />
                     حذف
                   </Button>
