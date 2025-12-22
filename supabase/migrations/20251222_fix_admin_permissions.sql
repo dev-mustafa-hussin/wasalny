@@ -1,6 +1,31 @@
--- Final Admin & Schema Fixes (Corrected Types)
+-- Final Admin & Schema Fixes (Total Reconstruction)
 
--- 1. Create delivery_settings if missing
+-- 1. Create app_role type if it doesn't exist
+DO $$
+BEGIN
+    IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'app_role') THEN
+        CREATE TYPE public.app_role AS ENUM ('admin', 'customer', 'driver');
+    END IF;
+END $$;
+
+-- 2. Create/Replace has_role function
+CREATE OR REPLACE FUNCTION public.has_role(_user_id UUID, _role app_role)
+RETURNS BOOLEAN
+LANGUAGE sql
+STABLE
+SECURITY DEFINER
+SET search_path = public
+AS $$
+  SELECT EXISTS (
+    SELECT 1
+    FROM public.user_roles
+    WHERE user_id = _user_id
+      AND role = _role
+  )
+$$;
+
+-- 3. Create missing tables
+-- delivery_settings
 CREATE TABLE IF NOT EXISTS public.delivery_settings (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   base_price DECIMAL(10,2) DEFAULT 10.00,
@@ -9,10 +34,9 @@ CREATE TABLE IF NOT EXISTS public.delivery_settings (
   created_at TIMESTAMPTZ DEFAULT now() NOT NULL,
   updated_at TIMESTAMPTZ DEFAULT now() NOT NULL
 );
-
 ALTER TABLE public.delivery_settings ENABLE ROW LEVEL SECURITY;
 
--- 2. Create email_templates if missing
+-- email_templates
 CREATE TABLE IF NOT EXISTS public.email_templates (
   id uuid NOT NULL DEFAULT gen_random_uuid() PRIMARY KEY,
   template_key text NOT NULL UNIQUE,
@@ -32,11 +56,10 @@ CREATE TABLE IF NOT EXISTS public.email_templates (
   created_at timestamp with time zone NOT NULL DEFAULT now(),
   updated_at timestamp with time zone NOT NULL DEFAULT now()
 );
-
 ALTER TABLE public.email_templates ENABLE ROW LEVEL SECURITY;
 
 
--- 3. Ensure ADMIN Role for the user
+-- 4. Ensure ADMIN Role for the user
 DO $$
 DECLARE
   v_user_email text := 'dev-mustafa-hussin@hotmail.com';
@@ -51,7 +74,7 @@ BEGIN
 END $$;
 
 
--- 4. Set/Refine Policies
+-- 5. Set/Refine Policies
 -- Delivery settings
 DROP POLICY IF EXISTS "Delivery settings viewable by everyone" ON public.delivery_settings;
 DROP POLICY IF EXISTS "Admins can manage delivery settings" ON public.delivery_settings;
@@ -60,7 +83,6 @@ CREATE POLICY "Admins can manage delivery settings" ON public.delivery_settings 
 
 -- Email templates
 DROP POLICY IF EXISTS "Admins can manage email templates" ON public.email_templates;
-DROP POLICY IF EXISTS "Email templates readable by service role" ON public.email_templates;
 DROP POLICY IF EXISTS "Email templates readable by everyone" ON public.email_templates;
 CREATE POLICY "Admins can manage email templates" ON public.email_templates FOR ALL TO authenticated USING (public.has_role(auth.uid(), 'admin'::app_role));
 CREATE POLICY "Email templates readable by everyone" ON public.email_templates FOR SELECT USING (true);
@@ -70,7 +92,7 @@ DROP POLICY IF EXISTS "Admins can view all drivers" ON public.drivers;
 CREATE POLICY "Admins can view all drivers" ON public.drivers FOR SELECT TO authenticated USING (public.has_role(auth.uid(), 'admin'::app_role));
 
 
--- 5. Insert Default Data
+-- 6. Insert Default Data
 INSERT INTO public.delivery_settings (base_price, price_per_km, min_order_amount)
 SELECT 10.00, 2.00, 20.00
 WHERE NOT EXISTS (SELECT 1 FROM public.delivery_settings);
