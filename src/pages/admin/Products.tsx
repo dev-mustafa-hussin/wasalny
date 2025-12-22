@@ -37,6 +37,11 @@ export default function Products() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const { toast } = useToast();
+  const [searchQuery, setSearchQuery] = useState('');
+
+  const filteredProducts = products.filter(product => 
+    product.name.toLowerCase().includes(searchQuery.toLowerCase())
+  );
 
   const [formData, setFormData] = useState({
     name: '',
@@ -158,7 +163,14 @@ export default function Products() {
           <h1 className="text-2xl font-bold">المنتجات</h1>
           <p className="text-muted-foreground">إدارة منتجات المتاجر</p>
         </div>
-        <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+        <div className="flex items-center gap-4">
+           <Input
+             placeholder="بحث عن منتج..."
+             value={searchQuery}
+             onChange={(e) => setSearchQuery(e.target.value)}
+             className="w-64"
+           />
+           <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
           <DialogTrigger asChild>
             <Button onClick={() => handleOpenDialog()} disabled={stores.length === 0}>
               <Plus className="h-4 w-4 ml-2" />
@@ -253,7 +265,7 @@ export default function Products() {
         </Card>
       ) : (
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-          {products.map((product) => (
+          {filteredProducts.map((product) => (
             <Card key={product.id} className="overflow-hidden">
               {product.image_url && (
                 <img

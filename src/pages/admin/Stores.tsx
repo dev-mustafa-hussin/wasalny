@@ -31,7 +31,12 @@ export default function Stores() {
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingStore, setEditingStore] = useState<StoreType | null>(null);
+  const [searchQuery, setSearchQuery] = useState('');
   const { toast } = useToast();
+
+  const filteredStores = stores.filter(store => 
+    store.name.toLowerCase().includes(searchQuery.toLowerCase())
+  );
 
   const [formData, setFormData] = useState({
     name: '',
@@ -159,7 +164,14 @@ export default function Stores() {
           <h1 className="text-2xl font-bold">المتاجر</h1>
           <p className="text-muted-foreground">إدارة المطاعم والأسواق</p>
         </div>
-        <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+        <div className="flex items-center gap-4">
+          <Input
+            placeholder="بحث عن متجر..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="w-64"
+          />
+          <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
           <DialogTrigger asChild>
             <Button onClick={() => handleOpenDialog()}>
               <Plus className="h-4 w-4 ml-2" />
@@ -267,7 +279,7 @@ export default function Stores() {
         </Card>
       ) : (
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-          {stores.map((store) => (
+          {filteredStores.map((store) => (
             <Card key={store.id} className="overflow-hidden">
               {store.image_url && (
                 <img
