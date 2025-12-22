@@ -1,104 +1,122 @@
 ![Wasalny Banner](public/social-preview.png)
 
-# Wasalny 🚚
+# Wasalny | وصلني 🚚
 
-[![Frontend CI](https://github.com/dev-mustafa-hussin/build-your-app/actions/workflows/ci.yml/badge.svg)](https://github.com/dev-mustafa-hussin/build-your-app/actions/workflows/ci.yml)
+[![Frontend CI](https://github.com/dev-mustafa-hussin/wasalny/actions/workflows/ci.yml/badge.svg)](https://github.com/dev-mustafa-hussin/wasalny/actions/workflows/ci.yml)
 [![License: AGPL v3](https://img.shields.io/badge/License-AGPL_v3-blue.svg)](https://www.gnu.org/licenses/agpl-3.0)
+[![Vercel](https://img.shields.io/badge/Vercel-000000?style=flat&logo=vercel&logoColor=white)](https://wasalny-six.vercel.app/)
 
-**Wasalny** is a comprehensive delivery and logistics application designed to streamline order management, driver coordination, and customer deliveries. It leverages interactive maps and a modern real-time architecture to ensure efficient operations.
+**Wasalny** (وصلني) is a professional, high-performance logistics and delivery management ecosystem. Designed to bridge the gap between merchants, drivers, and customers, it provides real-time tracking, intelligent order routing, and comprehensive management dashboards.
 
-[Live Demo](https://wasalny-six.vercel.app/)
+[**🌐 Live Demo**](https://wasalny-six.vercel.app/) | [**📄 العربية (Documentation)**](شرح_التطبيق/00_المقدمة_والاتصال.md)
 
-## ✨ Features
+---
 
-- **User Authentication**: Secure sign-up and login for Admins, Merchants, and Drivers using Supabase Auth.
-- **Interactive Maps**: Real-time visualization of orders, stores, and driver locations powered by Mapbox GL.
-- **Order Management**: Complete lifecycle management of delivery orders from creation to completion.
-- **Role-Based Dashboards**: Tailored views and functionalities for different user roles.
-- **Store Owner Dashboard**: Manage products, orders, and store settings.
-- **Modern UI/UX**: Built with Shadcn UI and Tailwind CSS for a sleek, responsive, and accessible interface.
-- **Dark Mode Support**: Seamless toggle between light and dark themes.
-- **PDF Export**: Generate invoices or reports directly from the application.
+## 🚀 Key Modules & Roles
+
+### 🏛️ Admin Control Center
+
+- **System Overview**: High-level analytics of total orders, revenue, and active users.
+- **User Management**: Control access levels for admins, merchants, and drivers.
+- **System Configuration**: Manage global settings, service areas, and fee structures.
+
+### 🏪 Merchant Portal
+
+- **Inventory Management**: Add and manage products with real-time stock updates.
+- **Order Pipeline**: Track orders from "Pending" to "Delivered" with granular status control.
+- **Sales Analytics**: View detailed reports on store performance and popular products.
+
+### 🚴 Driver Application
+
+- **Live Dispatch**: Receive instant notifications for new delivery requests in the vicinity.
+- **Smart Navigation**: Optimized routing powered by Mapbox for faster deliveries.
+- **Earnings Tracker**: Keep track of completed deliveries and calculated commissions.
+
+### 👤 Customer Experience
+
+- **Seamless Ordering**: Intuitive interface for browsing stores and placing orders.
+- **Real-time Tracking**: Watch your delivery progress live on the map.
+- **Order History**: Easy access to previous orders and invoice downloads.
+
+---
 
 ## 🛠️ Tech Stack
 
-- **Frontend**: [React](https://react.dev/) with [Vite](https://vitejs.dev/)
-- **Language**: [TypeScript](https://www.typescriptlang.org/)
-- **Styling**: [Tailwind CSS](https://tailwindcss.com/)
-- **UI Components**: [Shadcn UI](https://ui.shadcn.com/)
-- **State Management**: [React Query](https://tanstack.com/query/latest) & React Context
-- **Routing**: [React Router](https://reactrouter.com/)
-- **Forms**: [React Hook Form](https://react-hook-form.com/) & [Zod](https://zod.dev/)
-- **Backend & Database**: [Supabase](https://supabase.com/)
-- **Maps**: [Mapbox GL JS](https://docs.mapbox.com/mapbox-gl-js/)
+- **Core**: [React](https://react.dev/) + [Vite](https://vitejs.dev/) + [TypeScript](https://www.typescriptlang.org/)
+- **Backend-as-a-Service**: [Supabase](https://supabase.com/) (Auth, Database, Storage, Real-time)
+- **Mapping & Geospatial**: [Mapbox GL JS](https://docs.mapbox.com/mapbox-gl-js/)
+- **UI Framework**: [Tailwind CSS](https://tailwindcss.com/) + [Shadcn UI](https://ui.shadcn.com/)
+- **Data Fetching**: [Tanstack Query (React Query)](https://tanstack.com/query/latest)
+- **Form Management**: [React Hook Form](https://react-hook-form.com/) + [Zod Validation](https://zod.dev/)
 
-## 🚀 Getting Started
+---
 
-Follow these instructions to get a copy of the project up and running on your local machine.
+## 🏁 Getting Started
 
 ### Prerequisites
 
-- Node.js (v18 or higher recommended)
-- npm or yarn
+- **Node.js**: v18.0.0 or higher
+- **PackageManager**: `npm` or `bun`
 
 ### Installation
 
-1.  **Clone the repository**
+1. **Clone the Project**
 
-    ```bash
-    git clone https://github.com/dev-mustafa-hussin/build-your-app.git
-    cd build-your-app
-    ```
+   ```bash
+   git clone https://github.com/dev-mustafa-hussin/wasalny.git
+   cd wasalny
+   ```
 
-2.  **Install dependencies**
+2. **Install Dependencies**
 
-    ```bash
-    npm install
-    ```
+   ```bash
+   npm install
+   ```
 
-3.  **Environment Setup**
-    Create a `.env` file in the root directory and add your Supabase and Mapbox credentials:
+3. **Configure Environment Variables**
+   Create a `.env` file in the root directory:
 
-    ```env
-    VITE_SUPABASE_URL=your_supabase_url
-    VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
-    VITE_MAPBOX_TOKEN=your_mapbox_access_token
-    ```
+   ```env
+   VITE_SUPABASE_URL=your_supabase_url
+   VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
+   VITE_MAPBOX_TOKEN=your_mapbox_access_token
+   ```
 
-4.  **Run the development server**
+4. **Launch Development Environment**
+   ```bash
+   npm run dev
+   ```
 
-    ```bash
-    npm run dev
-    ```
+---
 
-5.  **Build for production**
-    ```bash
-    npm run build
-    ```
+## 📖 Detailed Guides (Arabic)
 
-## 📂 Project Structure
+We provide comprehensive documentation in Arabic to help you get started with each module:
 
-```
-src/
-├── components/   # Reusable UI components
-├── contexts/     # React Context providers
-├── hooks/        # Custom React hooks
-├── integrations/ # Third-party integrations (Supabase, OpenAI, etc.)
-├── lib/          # Utility functions and libraries
-├── pages/        # Application pages/routes
-└── App.tsx       # Main application component
-```
+- [المقدمة والاتصال](شرح_التطبيق/00_المقدمة_والاتصال.md)
+- [دليل الإدارة (Admin)](شرح_التطبيق/01_دليل_الادارة.md)
+- [دليل المتاجر (Merchants)](شرح_التطبيق/02_دليل_المتاجر.md)
+- [دليل السائقين (Drivers)](شرح_التطبيق/03_دليل_السائقين.md)
+- [دليل العملاء (Customers)](شرح_التطبيق/04_دليل_العملاء.md)
+
+---
 
 ## 🤝 Contributing
 
-Contributions are welcome! Please feel free to submit a Pull Request.
+Wasalny is an open-source project and we love contributions! Submitting a Pull Request is the best way to help.
 
-1.  Fork the project
-2.  Create your feature branch (`git checkout -b feature/AmazingFeature`)
-3.  Commit your changes (`git commit -m 'Add some AmazingFeature'`)
-4.  Push to the branch (`git push origin feature/AmazingFeature`)
-5.  Open a Pull Request
+1. Fork the Project.
+2. Create your Feature Branch (`git checkout -b feature/AmazingFeature`).
+3. Commit your Changes (`git commit -m 'Add some AmazingFeature'`).
+4. Push to the Branch (`git push origin feature/AmazingFeature`).
+5. Open a Pull Request.
+
+---
 
 ## 📄 License
 
-This project is licensed under the MIT License.
+This project is licensed under the **GNU Affero General Public License v3.0 (AGPL-3.0)**. See the [LICENSE](LICENSE) file for details.
+
+---
+
+<p align="center">Made with ❤️ by <a href="https://github.com/dev-mustafa-hussin">Mustafa Hussin</a></p>
