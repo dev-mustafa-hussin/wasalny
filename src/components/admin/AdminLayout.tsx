@@ -10,18 +10,16 @@ import { NotificationsPopover } from "./NotificationsPopover";
 
 export function AdminLayout() {
   // TEMPORARY: Mock for debugging
-  const user = { email: "admin@test.com" };
-  const loading = false;
-  // const { user, loading, userRole } = useAuth();
+  const { user, loading } = useAuth();
   const navigate = useNavigate();
 
   // Subscribe to real-time order notifications
   useOrderNotifications();
 
   useEffect(() => {
-    // if (!loading && !user) {
-    //   navigate("/auth");
-    // }
+    if (!loading && !user) {
+      navigate("/auth");
+    }
   }, [user, loading, navigate]);
 
   if (loading) {
