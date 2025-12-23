@@ -7,7 +7,7 @@
 
 **Wasalny** is a comprehensive delivery and logistics application designed to streamline order management, driver coordination, and customer deliveries. It leverages interactive maps and a modern real-time architecture to ensure efficient operations.
 
-[Live Demo](https://wasalny-ten.vercel.app/)
+[Live Demo](https://wasalny.3mcode-solutions.com)
 
 ## ✨ Features
 
