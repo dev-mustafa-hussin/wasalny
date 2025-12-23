@@ -91,65 +91,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       password,
       options: {
         emailRedirectTo: redirectUrl,
-        data: { full_name: fullName, role: role }, // Store role in user metadata as well
+        data: {
+          full_name: fullName,
+          role: role,
+          ...additionalData,
+        }, // Store role and other data in user metadata for the trigger
       },
     });
-
-    if (error) return { error };
-
-    if (data.user) {
-      try {
-        // Create Profile (Common for all roles)
-        const { error: profileError } = await supabase.from("profiles").insert({
-          user_id: data.user.id,
-          full_name: fullName,
-        });
-        if (profileError) {
-          console.error("Error creating profile:", profileError);
-          return { error: profileError };
-        }
-
-        if (role === "driver") {
-          console.log("Attempting to create driver profile for:", data.user.id);
-          const { error: driverError } = await supabase.from("drivers").insert({
-            user_id: data.user.id,
-            vehicle_type: additionalData.vehicleType,
-            vehicle_number: additionalData.vehicleNumber,
-            status: "pending",
-          });
-          if (driverError) {
-            console.error("Error creating driver profile:", driverError);
-            return { error: driverError };
-          } else {
-            console.log("Driver profile created successfully");
-          }
-        } else if (role === "store_owner") {
-          const { error: storeError } = await supabase.from("stores").insert({
-            owner_id: data.user.id,
-            name: additionalData.storeName,
-            type: additionalData.storeType || "restaurant",
-            phone: additionalData.storePhone,
-            status: "pending",
-          });
-          if (storeError) {
-            console.error("Error creating store:", storeError);
-            return { error: storeError };
-          }
-        }
-
-        // Upsert role to user_roles table
-        const { error: roleError } = await supabase.from("user_roles").upsert({
-          user_id: data.user.id,
-          role: role as any,
-        });
-        if (roleError) {
-          console.error("Error setting user role:", roleError);
-          return { error: roleError };
-        }
-      } catch (err) {
-        console.error("Error in post-signup operations:", err);
-      }
-    }
 
     return { error };
   };
