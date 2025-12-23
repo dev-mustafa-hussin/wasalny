@@ -104,8 +104,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           user_id: data.user.id,
           full_name: fullName,
         });
-        if (profileError)
+        if (profileError) {
           console.error("Error creating profile:", profileError);
+          return { error: profileError };
+        }
 
         if (role === "driver") {
           console.log("Attempting to create driver profile for:", data.user.id);
@@ -129,7 +131,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             phone: additionalData.storePhone,
             status: "pending",
           });
-          if (storeError) console.error("Error creating store:", storeError);
+          if (storeError) {
+            console.error("Error creating store:", storeError);
+            return { error: storeError };
+          }
         }
 
         // Upsert role to user_roles table
@@ -137,7 +142,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           user_id: data.user.id,
           role: role as any,
         });
-        if (roleError) console.error("Error setting user role:", roleError);
+        if (roleError) {
+          console.error("Error setting user role:", roleError);
+          return { error: roleError };
+        }
       } catch (err) {
         console.error("Error in post-signup operations:", err);
       }

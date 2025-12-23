@@ -4,7 +4,7 @@
 DO $$
 BEGIN
     IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'app_role') THEN
-        CREATE TYPE public.app_role AS ENUM ('admin', 'customer', 'driver');
+        CREATE TYPE public.app_role AS ENUM ('admin', 'customer', 'driver', 'store_owner');
     END IF;
 END $$;
 
